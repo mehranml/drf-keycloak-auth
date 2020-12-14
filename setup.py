@@ -1,3 +1,4 @@
+from os import path
 import setuptools
 
 import drf_keycloak_auth as meta
