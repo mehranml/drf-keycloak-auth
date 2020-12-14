@@ -43,7 +43,7 @@ class KeycloakMiddleware:
                 f'KeycloakMiddleware._bind_roles_to_request - Exception: {e}'
             )
 
-        if api_settings['KEYCLOAK_MANAGE_LOCAL_GROUPS'] is True:
+        if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
             groups = self._get_or_create_groups(roles)
             self._refresh_user_groups(request, groups)
 

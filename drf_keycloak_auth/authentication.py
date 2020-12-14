@@ -19,7 +19,7 @@ User = get_user_model()
 
 
 class KeycloakAuthentication(authentication.TokenAuthentication):
-    keyword = api_settings['KEYCLOAK_AUTH_HEADER_PREFIX']
+    keyword = api_settings.KEYCLOAK_AUTH_HEADER_PREFIX
 
     def authenticate_credentials(
         self,
@@ -36,7 +36,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 raise exceptions.AuthenticationFailed(
                     'invalid or expired token'
                 )
-            if api_settings['KEYCLOAK_MANAGE_LOCAL_USER'] is not True:
+            if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
                 log.info(
                     'KeycloakAuthentication.authenticate_credentials: '
                     f'{decoded_token}'

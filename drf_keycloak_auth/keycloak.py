@@ -7,12 +7,10 @@ from .settings import api_settings
 
 try:
     keycloak_openid = KeycloakOpenID(
-        server_url=api_settings['KEYCLOAK_SERVER_URL'],
-        realm_name=api_settings['KEYCLOAK_REALM'],
-        client_id=api_settings['KEYCLOAK_CLIENT_ID'],
-        client_secret_key=(
-            api_settings['KEYCLOAK_CLIENT_SECRET_KEY']
-        )
+        server_url=api_settings.KEYCLOAK_SERVER_URL,
+        realm_name=api_settings.KEYCLOAK_REALM,
+        client_id=api_settings.KEYCLOAK_CLIENT_ID,
+        client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
     )
 except KeyError as e:
     raise KeyError(
@@ -26,7 +24,7 @@ def get_resource_roles(decoded_token: Dict) -> List[str]:
     try:
         resource_access_roles = (
             decoded_token['resource_access']
-            [api_settings['KEYCLOAK_CLIENT_ID']]
+            [api_settings.KEYCLOAK_CLIENT_ID]
             ['roles']
         )
         return [f'role:{x}' for x in resource_access_roles]
