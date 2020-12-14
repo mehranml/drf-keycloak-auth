@@ -42,7 +42,7 @@ and add this to the `MIDDLEWARE` configuration to parse roles from the JWT
 ```
 MIDDLEWARE = [
     ...
-    'ecocommons_keycloak.middleware.KeycloakMiddleware'
+    'drf_keycloak_auth.middleware.KeycloakMiddleware'
 ]
 ```
 
