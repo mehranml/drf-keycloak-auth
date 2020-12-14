@@ -1,22 +1,22 @@
 """ module for app specific keycloak connection """
 from typing import Dict, List
 
-from django.conf import settings
 from keycloak import KeycloakOpenID
 
+from .settings import api_settings
 
 try:
     keycloak_openid = KeycloakOpenID(
-        server_url=settings.KEYCLOAK_CONFIG['KEYCLOAK_SERVER_URL'],
-        realm_name=settings.KEYCLOAK_CONFIG['KEYCLOAK_REALM'],
-        client_id=settings.KEYCLOAK_CONFIG['KEYCLOAK_CLIENT_ID'],
+        server_url=api_settings['KEYCLOAK_SERVER_URL'],
+        realm_name=api_settings['KEYCLOAK_REALM'],
+        client_id=api_settings['KEYCLOAK_CLIENT_ID'],
         client_secret_key=(
-            settings.KEYCLOAK_CONFIG['KEYCLOAK_CLIENT_SECRET_KEY']
+            api_settings['KEYCLOAK_CLIENT_SECRET_KEY']
         )
     )
 except KeyError as e:
     raise KeyError(
-        f'invalid settings.KEYCLOAK_CONFIG: {e}'
+        f'invalid settings: {e}'
     )
 
 
@@ -26,7 +26,7 @@ def get_resource_roles(decoded_token: Dict) -> List[str]:
     try:
         resource_access_roles = (
             decoded_token['resource_access']
-            [settings.KEYCLOAK_CONFIG['KEYCLOAK_CLIENT_ID']]
+            [api_settings['KEYCLOAK_CLIENT_ID']]
             ['roles']
         )
         return [f'role:{x}' for x in resource_access_roles]
