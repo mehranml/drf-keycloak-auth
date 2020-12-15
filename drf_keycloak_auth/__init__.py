@@ -1,4 +1,4 @@
-"""Metadata for Authicola package."""
+"""Metadata for drf_keycloak_auth package."""
 __title__ = 'drf_keycloak_auth'
 __description__ = \
     'A convenience libary for authenticating users from Keycloak access tokens'
