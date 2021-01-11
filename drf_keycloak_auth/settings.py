@@ -18,6 +18,8 @@ DEFAULTS = {
         os.getenv('KEYCLOAK_MANAGE_LOCAL_USER', True),
     'KEYCLOAK_MANAGE_LOCAL_GROUPS':
         os.getenv('KEYCLOAK_MANAGE_LOCAL_GROUPS', False),
+    'KEYCLOAK_FIELD_AS_DJANGO_USERNAME':
+        os.getenv('KEYCLOAK_FIELD_AS_DJANGO_USERNAME', 'preferred_username')
 }
 
 # List of settings that may be in string import notation.
