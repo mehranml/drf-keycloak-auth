@@ -4,12 +4,13 @@ from typing import List
 from rest_framework import permissions
 
 from . import __title__
+from .keycloak import prefix_role
 
 log = logging.getLogger(__title__)
 
-ROLE_USER = 'role:user'
-ROLE_SERVICE = 'role:service'
-ROLE_ADMIN = 'role:admin'
+ROLE_USER = prefix_role('user')
+ROLE_SERVICE = prefix_role('service')
+ROLE_ADMIN = prefix_role('admin')
 
 
 def _has_required_group(request, required_groups: List[str]) -> bool:

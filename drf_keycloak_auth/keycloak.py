@@ -1,9 +1,13 @@
 """ module for app specific keycloak connection """
 from typing import Dict, List
+import logging
 
 from keycloak import KeycloakOpenID
 
 from .settings import api_settings
+from . import __title__
+
+log = logging.getLogger(__title__)
 
 try:
     keycloak_openid = KeycloakOpenID(
@@ -27,6 +31,33 @@ def get_resource_roles(decoded_token: Dict) -> List[str]:
             [api_settings.KEYCLOAK_CLIENT_ID]
             ['roles']
         )
-        return [f'role:{x}' for x in resource_access_roles]
-    except Exception as _:
+        roles = add_role_prefix(resource_access_roles)
+        log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
+
+        return roles
+    except Exception as e:
+        log.warn(f'{__name__} - get_resource_roles - Exception: {e}')
         return []
+
+
+def add_role_prefix(roles: List[str]) -> List[str]:
+    """
+    add role prefix configured by KEYCLOAK_ROLE_SET_PREFIX to a list of roles
+    """
+    log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
+    prefixed_roles = [prefix_role(x) for x in roles]
+    log.debug(
+        f'{__name__} - get_resource_roles - prefixed_roles: {prefixed_roles}'
+    )
+    return prefixed_roles
+
+
+def prefix_role(role: str) -> str:
+    """ add prefix to role string """
+    role_prefix = (
+        api_settings.KEYCLOAK_ROLE_SET_PREFIX
+        if api_settings.KEYCLOAK_ROLE_SET_PREFIX
+        and type(api_settings.KEYCLOAK_ROLE_SET_PREFIX) is str
+        else ''
+    )
+    return f'{role_prefix}{role}'

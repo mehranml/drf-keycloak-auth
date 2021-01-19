@@ -43,32 +43,46 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 )
                 user = AnonymousUser()
             else:
-                username = decoded_token['sub']
-                email = decoded_token['email']
+                django_fields = {}
+                keycloak_username_field = \
+                    api_settings.KEYCLOAK_FIELD_AS_DJANGO_USERNAME
+
+                sub = decoded_token['sub']
+                if keycloak_username_field and type(keycloak_username_field) is str:
+                    django_fields['username'] = \
+                        decoded_token.get(keycloak_username_field, '')
+                django_fields['email'] = decoded_token['email']
                 # django stores first_name and last_name as empty strings
                 # by default, not None
-                first_name = decoded_token.get('given_name', '')
-                last_name = decoded_token.get('family_name', '')
+                django_fields['first_name'] = decoded_token.get('given_name', '')
+                django_fields['last_name'] = decoded_token.get('family_name', '')
                 try:
-                    user = User.objects.get(username=username)
-                    user_values = (user.email, user.first_name, user.last_name,)
-                    token_values = (email, first_name, last_name,)
-                    if user_values != token_values:
-                        user.email = email
-                        user.first_name = first_name
-                        user.last_name = last_name
+                    user = User.objects.get(pk=sub)
+                    # user_values = (user.email, user.first_name, user.last_name,)
+                    # token_values = (email, first_name, last_name,)
+                    save_model = False
+
+                    for key, value in django_fields.items():
+                        try:
+                            if getattr(user, key) != value:
+                                setattr(user, key, value)
+                                save_model = True
+                        except Exception:
+                            log.warn(
+                                'KeycloakAuthentication.'
+                                'authenticate_credentials - '
+                                f'setattr: {key} field does not exist'
+                            )
+                    if save_model:
                         user.save()
                 except ObjectDoesNotExist:
                     log.warn(
                         'KeycloakAuthentication.authenticate_credentials - '
-                        f'ObjectDoesNotExist: {username} does not exist'
+                        f'ObjectDoesNotExist: {sub} does not exist'
                     )
                 if user is None:
-                    user = User.objects.create_user(
-                        username,
-                        email,
-                        None  # if None set_unusable_password() will be called.
-                    )
+                    django_fields.update({'pk': sub})
+                    user = User.objects.create_user(**django_fields)
             log.info(
                 'KeycloakAuthentication.authenticate_credentials: '
                 f'{user} - {decoded_token}'
