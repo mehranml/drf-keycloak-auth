@@ -33,7 +33,6 @@ class KeycloakMiddleware:
         """
         log.debug('KeycloakMiddleware.process_view')
         request.roles = SimpleLazyObject(lambda: self._bind_roles_to_request(request))
-        self._user_is_staff(request)
         log.debug('KeycloakMiddleware.process_view complete')
 
     def _bind_roles_to_request(self, request) -> List[str]:
@@ -51,10 +50,12 @@ class KeycloakMiddleware:
             groups = self._get_or_create_groups(roles)
             self._refresh_user_groups(request, groups)
 
+        self._user_is_staff(request, roles)
+
         log.info(f'KeycloakMiddleware.bind_roles_to_request: {roles}')
         return roles
 
-    def _user_is_staff(self, request) -> None:
+    def _user_is_staff(self, request, roles: List[str]) -> None:
         """
         toggle user.is_staff if a role mapping has been declared in settings
         """
@@ -85,7 +86,7 @@ class KeycloakMiddleware:
                     f'KeycloakMiddleware._user_is_staff - {user} - '
                     f'is_staff_roles: {is_staff_roles}'
                 )
-                user_roles = set(request.roles)
+                user_roles = set(roles)
                 log.info(
                     f'KeycloakMiddleware._user_is_staff - {user} - '
                     f'user_roles: {user_roles}'
