@@ -3,7 +3,7 @@ from typing import Tuple, Dict
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, update_last_login
 from django.contrib.auth import get_user_model
 from rest_framework import (
     authentication,
@@ -80,9 +80,13 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                         'KeycloakAuthentication.authenticate_credentials - '
                         f'ObjectDoesNotExist: {sub} does not exist'
                     )
+
                 if user is None:
                     django_fields.update({'pk': sub})
                     user = User.objects.create_user(**django_fields)
+
+                update_last_login(sender=None, user=user)
+
             log.info(
                 'KeycloakAuthentication.authenticate_credentials: '
                 f'{user} - {decoded_token}'
