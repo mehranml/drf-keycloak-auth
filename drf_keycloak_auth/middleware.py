@@ -34,6 +34,7 @@ class KeycloakMiddleware:
         log.debug('KeycloakMiddleware.process_view')
         request.roles = SimpleLazyObject(lambda: self._bind_roles_to_request(request))
         self._user_is_staff(request)
+        log.debug('KeycloakMiddleware.process_view complete')
 
     def _bind_roles_to_request(self, request) -> List[str]:
         """ try to add roles from authenticated keycloak user """
@@ -65,6 +66,10 @@ class KeycloakMiddleware:
                 and type(user) is User
                 and hasattr(user, 'is_staff')
             )
+            log.info(
+                f'KeycloakMiddleware._user_is_staff - {user} - valid_user: '
+                f'{valid_user}'
+            )
             if (
                 valid_user
                 and api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
@@ -76,8 +81,20 @@ class KeycloakMiddleware:
                         api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
                     )
                 )
+                log.info(
+                    f'KeycloakMiddleware._user_is_staff - {user} - '
+                    f'is_staff_roles: {is_staff_roles}'
+                )
                 user_roles = set(request.roles)
+                log.info(
+                    f'KeycloakMiddleware._user_is_staff - {user} - '
+                    f'user_roles: {user_roles}'
+                )
                 is_staff = bool(is_staff_roles.intersection(user_roles))
+                log.info(
+                    f'KeycloakMiddleware._user_is_staff - {user} - '
+                    f'is_staff: {is_staff}'
+                )
                 # don't write unnecessarily, check different first
                 if is_staff != user.is_staff:
                     user.is_staff = is_staff
