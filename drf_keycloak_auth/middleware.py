@@ -3,12 +3,15 @@ from typing import List
 
 from django.utils.functional import SimpleLazyObject
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 
-from .keycloak import get_resource_roles
+from .keycloak import get_resource_roles, add_role_prefix
 from . import __title__
 from .settings import api_settings
 
 log = logging.getLogger(__title__)
+
+User = get_user_model()
 
 
 class KeycloakMiddleware:
@@ -29,8 +32,8 @@ class KeycloakMiddleware:
         KeycloakAuthentication
         """
         log.debug('KeycloakMiddleware.process_view')
-        # SimpleLazyObject required as KeycloakMiddleware is called BEFORE KeycloakAuthentication
         request.roles = SimpleLazyObject(lambda: self._bind_roles_to_request(request))
+        self._user_is_staff(request)
 
     def _bind_roles_to_request(self, request) -> List[str]:
         """ try to add roles from authenticated keycloak user """
@@ -49,6 +52,40 @@ class KeycloakMiddleware:
 
         log.info(f'KeycloakMiddleware.bind_roles_to_request: {roles}')
         return roles
+
+    def _user_is_staff(self, request) -> None:
+        """
+        toggle user.is_staff if a role mapping has been declared in settings
+        """
+        try:
+            user = request.user
+            # catch None or django.contrib.auth.models.AnonymousUser
+            valid_user = bool(
+                user
+                and type(user) is User
+                and hasattr(user, 'is_staff')
+            )
+            if (
+                valid_user
+                and api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
+                and type(api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF)
+                in [list, tuple, set]
+            ):
+                is_staff_roles = set(
+                    add_role_prefix(
+                        api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
+                    )
+                )
+                user_roles = set(request.roles)
+                is_staff = bool(is_staff_roles.intersection(user_roles))
+                # don't write unnecessarily, check different first
+                if is_staff != user.is_staff:
+                    user.is_staff = is_staff
+                    user.save()
+        except Exception as e:
+            log.warn(
+                f'KeycloakMiddleware._user_is_staff - exception: {e}'
+            )
 
     def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
         groups = []
