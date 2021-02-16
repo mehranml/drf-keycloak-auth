@@ -66,6 +66,7 @@ class KeycloakMiddleware:
                 user
                 and type(user) is User
                 and hasattr(user, 'is_staff')
+                and getattr(user, 'is_superuser', False) is False
             )
             log.info(
                 f'KeycloakMiddleware._user_is_staff - {user} - valid_user: '
