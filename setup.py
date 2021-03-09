@@ -4,7 +4,7 @@ import setuptools
 import drf_keycloak_auth as meta
 
 this_dir = path.abspath(path.dirname(__file__))
-with open(path.join(this_dir, 'README.md'), 'r', encoding='utf-8') as f:
+with open(path.join(this_dir, 'README.md'), mode='r') as f:
     long_description = f.read()
 
 setuptools.setup(
