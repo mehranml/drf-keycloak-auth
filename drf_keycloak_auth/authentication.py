@@ -51,7 +51,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 if keycloak_username_field and type(keycloak_username_field) is str:
                     django_fields['username'] = \
                         decoded_token.get(keycloak_username_field, '')
-                django_fields['email'] = decoded_token['email']
+                django_fields['email'] = decoded_token.get('email', '')
                 # django stores first_name and last_name as empty strings
                 # by default, not None
                 django_fields['first_name'] = decoded_token.get('given_name', '')
