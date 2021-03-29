@@ -6,9 +6,6 @@ stages:
   - Build
   - Publish
 
-before_script:
-  - echo "${CI_JOB_TOKEN}" | docker login -u "${CI_REGISTRY_USER}" "${CI_REGISTRY}" --password-stdin
-
 linting:
   stage: Static Analysis
   before_script:
