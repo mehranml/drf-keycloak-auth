@@ -51,18 +51,22 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     api_settings.KEYCLOAK_DJANGO_USER_UUID_FIELD
 
                 sub = decoded_token['sub']
-                if keycloak_username_field and type(keycloak_username_field) is str:
+                if (
+                    keycloak_username_field
+                    and
+                    type(keycloak_username_field) is str
+                ):
                     django_fields['username'] = \
                         decoded_token.get(keycloak_username_field, '')
                 django_fields['email'] = decoded_token.get('email', '')
                 # django stores first_name and last_name as empty strings
                 # by default, not None
-                django_fields['first_name'] = decoded_token.get('given_name', '')
-                django_fields['last_name'] = decoded_token.get('family_name', '')
+                django_fields['first_name'] = \
+                    decoded_token.get('given_name', '')
+                django_fields['last_name'] = \
+                    decoded_token.get('family_name', '')
                 try:
                     user = User.objects.get(**{django_uuid_field: sub})
-                    # user_values = (user.email, user.first_name, user.last_name,)
-                    # token_values = (email, first_name, last_name,)
                     save_model = False
 
                     for key, value in django_fields.items():

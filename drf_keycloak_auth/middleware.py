@@ -16,7 +16,7 @@ User = get_user_model()
 
 class KeycloakMiddleware:
 
-    def __init__(self, get_response):     
+    def __init__(self, get_response):
         # Django response
         self.get_response = get_response
 
@@ -27,12 +27,14 @@ class KeycloakMiddleware:
     def process_view(self, request, view_func, view_args, view_kwargs) -> None:
         """
         middleware lifecyle method where view has been determined
-        
+
         SimpleLazyObject required as KeycloakMiddleware is called BEFORE
         KeycloakAuthentication
         """
         log.debug('KeycloakMiddleware.process_view')
-        request.roles = SimpleLazyObject(lambda: self._bind_roles_to_request(request))
+        request.roles = SimpleLazyObject(
+            lambda: self._bind_roles_to_request(request)
+        )
         log.debug('KeycloakMiddleware.process_view complete')
 
     def _bind_roles_to_request(self, request) -> List[str]:
