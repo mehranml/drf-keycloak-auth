@@ -18,6 +18,11 @@ venv:
   stage: Bootstrap
   script:
     - make install-dependencies
+  artifacts:
+    when: on_success
+    expire_in: 1 hour
+    paths:
+      - venv/
   only:
     refs:
       - master
@@ -26,6 +31,13 @@ build:
   stage: Build
   script:
     - make
+  dependencies:
+    - venv
+  artifacts:
+    when: on_success
+    expire_in: 6 mos
+    paths:
+      - dist/
   only:
     refs:
       - master
