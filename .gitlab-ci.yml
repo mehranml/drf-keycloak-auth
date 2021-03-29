@@ -25,6 +25,7 @@ venv:
       - venv/
   only:
     refs:
+      - tags
       - master
 
 build:
@@ -40,6 +41,7 @@ build:
       - dist/
   only:
     refs:
+      - tags
       - master
 
 pypi:
