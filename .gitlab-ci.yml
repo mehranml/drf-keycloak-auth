@@ -46,6 +46,8 @@ build:
 
 pypi:
   stage: Publish
+  before_script:
+    - cat $PYPIRC > ~/.pypirc
   script:
     - make publish-pypi
   only:
