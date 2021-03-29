@@ -24,7 +24,7 @@ setuptools.setup(
         'Operating System :: OS Independent',
     ],
     python_requires='>=3.4',
-    install_requires = [
+    install_requires=[
         'djangorestframework>=3.9,<4',
         'python-keycloak>=0.22.0,<1',
         'django>=2'
