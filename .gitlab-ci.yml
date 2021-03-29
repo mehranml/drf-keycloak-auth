@@ -1,0 +1,33 @@
+image: python:3.9
+
+stages:
+  - Static Analysis
+  - Build
+  - Publish
+
+before_script:
+  - echo "${CI_JOB_TOKEN}" | docker login -u "${CI_REGISTRY_USER}" "${CI_REGISTRY}" --password-stdin
+
+linting:
+  stage: Static Analysis
+  before_script:
+    - python --version
+    - pip install pycodestyle
+  script:
+    - pycodestyle --format=pylint drf_keycloak_auth/
+
+build:
+  stage: Build
+  script:
+    - make
+  only:
+    refs:
+      - master
+
+pypi:
+  stage: Publish
+  script:
+    - make publish-pypi
+  only:
+    refs:
+      - tags
