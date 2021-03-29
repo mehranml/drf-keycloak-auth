@@ -13,7 +13,7 @@ build-package:
 
 publish-pypi:
 	. venv/bin/activate && \
-	twine upload dist/*
+	twine upload -r pypi dist/*
 
 publish-testpypi:
 	. venv/bin/activate && \
