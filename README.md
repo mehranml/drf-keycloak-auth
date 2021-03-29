@@ -68,6 +68,8 @@ DEFAULTS = {
         os.getenv('KEYCLOAK_MANAGE_LOCAL_USER', True),
     'KEYCLOAK_MANAGE_LOCAL_GROUPS':
         os.getenv('KEYCLOAK_MANAGE_LOCAL_GROUPS', False),
+    'KEYCLOAK_DJANGO_USER_UUID_FIELD':
+        os.getenv('KEYCLOAK_DJANGO_USER_UUID_FIELD', 'pk'),
     'KEYCLOAK_FIELD_AS_DJANGO_USERNAME':
         os.getenv('KEYCLOAK_FIELD_AS_DJANGO_USERNAME', 'preferred_username'),
     'KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF': (
@@ -115,6 +117,12 @@ ROLE_ADMIN = prefix_role('admin')
 request.user.is_staff will be modified based upon roles in `KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF`.
 These roles can be hard coded as a list, tuple or set, or from a comma-separated env var.
 Functionality ignored if KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF is None or empty.
+
+If your user model doesn't / can't have a UUID primary key, override the `KEYCLOAK_DJANGO_USER_UUID_FIELD` setting to indicate a unique `UUIDField` on your model, e.g.:
+
+```
+KEYCLOAK_DJANGO_USER_UUID_FIELD = 'uuid'
+```
 
 
 Voila!

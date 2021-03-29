@@ -47,6 +47,9 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 keycloak_username_field = \
                     api_settings.KEYCLOAK_FIELD_AS_DJANGO_USERNAME
 
+                django_uuid_field = \
+                    api_settings.KEYCLOAK_DJANGO_USER_UUID_FIELD
+
                 sub = decoded_token['sub']
                 if keycloak_username_field and type(keycloak_username_field) is str:
                     django_fields['username'] = \
@@ -57,7 +60,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 django_fields['first_name'] = decoded_token.get('given_name', '')
                 django_fields['last_name'] = decoded_token.get('family_name', '')
                 try:
-                    user = User.objects.get(pk=sub)
+                    user = User.objects.get(**{django_uuid_field: sub})
                     # user_values = (user.email, user.first_name, user.last_name,)
                     # token_values = (email, first_name, last_name,)
                     save_model = False
@@ -82,7 +85,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     )
 
                 if user is None:
-                    django_fields.update({'pk': sub})
+                    django_fields.update(**{django_uuid_field: sub})
                     user = User.objects.create_user(**django_fields)
 
                 update_last_login(sender=None, user=user)
