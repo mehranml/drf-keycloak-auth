@@ -1,16 +1,16 @@
 """ add a keycloak authentication class specific to Django Rest Framework """
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import AnonymousUser, update_last_login
+from django.contrib.auth.models import AnonymousUser, update_last_login, Group
 from django.contrib.auth import get_user_model
 from rest_framework import (
     authentication,
     exceptions,
 )
 
-from .keycloak import keycloak_openid
+from .keycloak import keycloak_openid, get_resource_roles, add_role_prefix
 from .settings import api_settings
 from . import __title__
 
@@ -20,6 +20,47 @@ User = get_user_model()
 
 class KeycloakAuthentication(authentication.TokenAuthentication):
     keyword = api_settings.KEYCLOAK_AUTH_HEADER_PREFIX
+
+    def authenticate(self, request):
+        user, decoded_token = super().authenticate(request)
+        request.roles = self._get_roles(user, decoded_token)
+        if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
+            groups = self._get_or_create_groups(request.roles)
+            user.groups.set(groups)
+        self._user_toggle_is_staff(request, user)
+        return user, decoded_token
+
+    def authenticate_credentials(
+        self,
+        token: str
+    ) -> Tuple[AnonymousUser, Dict]:
+        """ Attempt to verify JWT from Authorization header with Keycloak """
+        log.debug('KeycloakAuthentication.authenticate_credentials')
+        try:
+            user = None
+            # Checks token is active
+            decoded_token = self._get_decoded_token(token)
+            self._verify_token_active(decoded_token)
+            if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
+                log.info(
+                    'KeycloakAuthentication.authenticate_credentials: '
+                    f'{decoded_token}'
+                )
+                user = AnonymousUser()
+            else:
+                user = self._handle_local_user(decoded_token)
+
+            log.info(
+                'KeycloakAuthentication.authenticate_credentials: '
+                f'{user} - {decoded_token}'
+            )
+            return (user, decoded_token)
+        except Exception as e:
+            log.error(
+                'KeycloakAuthentication.authenticate_credentials - '
+                f'Exception: {e}'
+            )
+            raise exceptions.AuthenticationFailed()
 
     def _get_decoded_token(self, token: str) -> str:
         """
@@ -105,34 +146,88 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         update_last_login(sender=None, user=user)
         return user
 
-    def authenticate_credentials(
+    def _get_roles(
         self,
-        token: str
-    ) -> Tuple[AnonymousUser, Dict]:
-        """ Attempt to verify JWT from Authorization header with Keycloak """
-        log.debug('KeycloakAuthentication.authenticate_credentials')
+        user: User,
+        decoded_token: dict
+    ) -> List[str]:
+        """ try to add roles from authenticated keycloak user """
+        roles = []
         try:
-            user = None
-            # Checks token is active
-            decoded_token = self._get_decoded_token(token)
-            self._verify_token_active(decoded_token)
-            if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
-                log.info(
-                    'KeycloakAuthentication.authenticate_credentials: '
-                    f'{decoded_token}'
-                )
-                user = AnonymousUser()
-            else:
-                user = self._handle_local_user(decoded_token)
-
-            log.info(
-                'KeycloakAuthentication.authenticate_credentials: '
-                f'{user} - {decoded_token}'
-            )
-            return (user, decoded_token)
+            roles += get_resource_roles(decoded_token)
+            roles.append(str(user.pk))
         except Exception as e:
-            log.error(
-                'KeycloakAuthentication.authenticate_credentials - '
+            log.warn(
+                'KeycloakAuthentication._get_roles | '
                 f'Exception: {e}'
             )
-            raise exceptions.AuthenticationFailed()
+
+        log.info(f'KeycloakAuthentication.get_roles: {roles}')
+        return roles
+
+    def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
+        groups = []
+        for role in roles:
+            group, created = Group.objects.get_or_create(name=role)
+            if created:
+                log.info(
+                    'KeycloakAuthentication._get_or_create_groups | created: '
+                    f'{group.name}'
+                )
+            else:
+                log.info(
+                    'KeycloakAuthentication._get_or_create_groups - exists: '
+                    f'{group.name}'
+                )
+            groups.append(group)
+        return groups
+
+    def _user_toggle_is_staff(self, request, user: User) -> None:
+        """
+        toggle user.is_staff if a role mapping has been declared in settings
+        """
+        try:
+            # catch None or django.contrib.auth.models.AnonymousUser
+            valid_user = bool(
+                user
+                and type(user) is User
+                and hasattr(user, 'is_staff')
+                and getattr(user, 'is_superuser', False) is False
+            )
+            log.debug(
+                f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
+                f'valid_user: {valid_user}'
+            )
+            if (
+                valid_user
+                and api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
+                and type(api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF)
+                in [list, tuple, set]
+            ):
+                is_staff_roles = set(
+                    add_role_prefix(
+                        api_settings.KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF
+                    )
+                )
+                log.debug(
+                    f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
+                    f'is_staff_roles: {is_staff_roles}'
+                )
+                user_roles = set(request.roles)
+                log.info(
+                    f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
+                    f'user_roles: {user_roles}'
+                )
+                is_staff = bool(is_staff_roles.intersection(user_roles))
+                log.debug(
+                    f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
+                    f'is_staff: {is_staff}'
+                )
+                # don't write unnecessarily, check different first
+                if is_staff != user.is_staff:
+                    user.is_staff = is_staff
+                    user.save()
+        except Exception as e:
+            log.warn(
+                f'KeycloakAuthentication._user_toggle_is_staff | Exception: {e}'
+            )
