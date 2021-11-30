@@ -59,7 +59,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             return (user, decoded_token)
         except Exception as e:
             log.error(
-                'KeycloakAuthentication.authenticate_credentials - '
+                'KeycloakAuthentication.authenticate_credentials | '
                 f'Exception: {e}'
             )
             raise exceptions.AuthenticationFailed()
@@ -132,6 +132,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         sub = decoded_token['sub']
         django_fields = self._map_keycloak_to_django_fields(decoded_token)
 
+        user = None
         try:
             user = User.objects.get(**{django_uuid_field: sub})
             user = self._update_user(user, django_fields)
