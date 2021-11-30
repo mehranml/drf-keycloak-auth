@@ -30,7 +30,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 groups = self._get_or_create_groups(request.roles)
                 user.groups.set(groups)
             self._user_toggle_is_staff(request, user)
-        return user, decoded_token
+        return credentials
 
     def authenticate_credentials(
         self,
