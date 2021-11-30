@@ -22,8 +22,9 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
     keyword = api_settings.KEYCLOAK_AUTH_HEADER_PREFIX
 
     def authenticate(self, request):
-        user, decoded_token = super().authenticate(request)
-        if user and decoded_token:
+        credentials = super().authenticate(request)
+        if credentials:
+            user, decoded_token = credentials
             request.roles = self._get_roles(user, decoded_token)
             if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
                 groups = self._get_or_create_groups(request.roles)
