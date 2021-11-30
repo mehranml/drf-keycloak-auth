@@ -23,11 +23,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     def authenticate(self, request):
         user, decoded_token = super().authenticate(request)
-        request.roles = self._get_roles(user, decoded_token)
-        if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
-            groups = self._get_or_create_groups(request.roles)
-            user.groups.set(groups)
-        self._user_toggle_is_staff(request, user)
+        if user and decoded_token:
+            request.roles = self._get_roles(user, decoded_token)
+            if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
+                groups = self._get_or_create_groups(request.roles)
+                user.groups.set(groups)
+            self._user_toggle_is_staff(request, user)
         return user, decoded_token
 
     def authenticate_credentials(
