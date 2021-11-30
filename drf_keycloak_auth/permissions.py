@@ -83,11 +83,12 @@ def _has_required_role(request, required_roles: List[str]) -> bool:
         f'{__name__}._has_required_role - required_roles: '
         f'{required_roles}'
     )
+    roles = getattr(request, 'roles', list)
     log.info(
         f'{__name__}._has_required_role - request.roles: '
-        f'{request.roles}'
+        f'{roles}'
     )
-    return bool(set(required_roles).intersection(set(request.roles)))
+    return bool(set(required_roles).intersection(set(roles)))
 
 
 class BaseRoleBasedPermission(permissions.BasePermission):
