@@ -37,16 +37,6 @@ REST_FRAMEWORK = {
 }
 ```
 
-and add this to the `MIDDLEWARE` configuration to parse roles from the JWT
-
-```
-MIDDLEWARE = [
-    ...
-    'drf_keycloak_auth.middleware.KeycloakMiddleware'
-]
-```
-
-
 The `drf_keycloak_auth` application comes with the following settings as default, which can be overridden in your project's `settings.py` file. Make sure to nest them within `DRF_KEYCLOAK_AUTH` as below:
 
 
@@ -86,7 +76,7 @@ All you need to do now is have your client code handle the Keycloak authenticati
 Bearer <token>
 ```
 
-Roles will be present in `request.roles` with a `KEYCLOAK_ROLE_SET_PREFIX` prefix, e.g.:
+Roles will be present in `request.roles` with a `KEYCLOAK_ROLE_SET_PREFIX` prefix (only if succesfully authenticated), e.g.:
 
 ```
 ['role:admin', 'a4a9be6e-bd04-42f8-9377-27d9db82216f']

@@ -16,11 +16,11 @@ ROLE_ADMIN = prefix_role('admin')
 def _has_required_group(request, required_groups: List[str]) -> bool:
     user_groups = [x.name for x in request.user.groups.all()]
     log.info(
-        f'{__name__}._has_required_group - required_groups: '
+        '_has_required_group | required_groups: '
         f'{required_groups}'
     )
     log.info(
-        f'{__name__}._has_required_group - user_groups: '
+        '_has_required_group | user_groups: '
         f'{user_groups}'
     )
     return bool(
@@ -36,7 +36,7 @@ class BaseGroupBasedPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         log.info(
-            f'{self.__class__.__name__}.has_permission: '
+            'BaseGroupBasedPermission.has_permission: '
             f'{self.required_groups}'
         )
         return bool(
@@ -44,13 +44,8 @@ class BaseGroupBasedPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        log.info(
-            f'{self.__class__.__name__}.has_object_permission: '
-            f'{self.required_groups}'
-        )
-        return bool(
-            request.user and _has_required_group(request, self.required_groups)
-        )
+        log.info('BaseGroupBasedPermission.has_object_permission')
+        return self.has_permission(request, view)
 
 
 class HasAdminGroup(BaseGroupBasedPermission):
@@ -70,7 +65,7 @@ class HasOwnerGroup(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         required_groups = [str(obj.owner.pk)]
         log.info(
-            f'{self.__class__.__name__}.has_object_permission: '
+            'HasOwnerGroup.has_object_permission: '
             f'{required_groups}'
         )
         return bool(
@@ -80,14 +75,15 @@ class HasOwnerGroup(permissions.BasePermission):
 
 def _has_required_role(request, required_roles: List[str]) -> bool:
     log.info(
-        f'{__name__}._has_required_role - required_roles: '
+        '_has_required_role | required_roles: '
         f'{required_roles}'
     )
+    roles = getattr(request, 'roles', list())
     log.info(
-        f'{__name__}._has_required_role - request.roles: '
-        f'{request.roles}'
+        '_has_required_role | request.roles: '
+        f'{roles}'
     )
-    return bool(set(required_roles).intersection(set(request.roles)))
+    return bool(set(required_roles).intersection(set(roles)))
 
 
 class BaseRoleBasedPermission(permissions.BasePermission):
@@ -95,7 +91,7 @@ class BaseRoleBasedPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         log.info(
-            f'{self.__class__.__name__}.has_permission: '
+            'BaseRoleBasedPermission.has_permission: '
             f'{self.required_roles}'
         )
         return bool(
@@ -103,13 +99,8 @@ class BaseRoleBasedPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        log.info(
-            f'{self.__class__.__name__}.has_object_permission: '
-            f'{self.required_roles}'
-        )
-        return bool(
-            request.user and _has_required_role(request, self.required_roles)
-        )
+        log.info('BaseRoleBasedPermission.has_object_permission')
+        return self.has_permission(request, view)
 
 
 class HasAdminRole(BaseRoleBasedPermission):
@@ -129,7 +120,7 @@ class HasOwnerRole(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         required_roles = [str(obj.owner.pk)]
         log.info(
-            f'{self.__class__.__name__}.has_object_permission: '
+            'HasOwnerRole.has_object_permission: '
             f'{required_roles}'
         )
         return bool(
