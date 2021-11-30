@@ -44,7 +44,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             decoded_token = self._get_decoded_token(token)
             self._verify_token_active(decoded_token)
             if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
-                log.info(
+                log.debug(
                     'KeycloakAuthentication.authenticate_credentials: '
                     f'{decoded_token}'
                 )
@@ -54,7 +54,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
             log.info(
                 'KeycloakAuthentication.authenticate_credentials: '
-                f'{user} - {decoded_token}'
+                f'{user} | {decoded_token}'
             )
             return (user, decoded_token)
         except Exception as e:
@@ -165,7 +165,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 f'Exception: {e}'
             )
 
-        log.info(f'KeycloakAuthentication.get_roles: {roles}')
+        log.info(f'KeycloakAuthentication._get_roles: {roles}')
         return roles
 
     def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
@@ -173,13 +173,13 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         for role in roles:
             group, created = Group.objects.get_or_create(name=role)
             if created:
-                log.info(
+                log.debug(
                     'KeycloakAuthentication._get_or_create_groups | created: '
                     f'{group.name}'
                 )
             else:
-                log.info(
-                    'KeycloakAuthentication._get_or_create_groups - exists: '
+                log.debug(
+                    'KeycloakAuthentication._get_or_create_groups | exists: '
                     f'{group.name}'
                 )
             groups.append(group)
@@ -217,7 +217,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     f'is_staff_roles: {is_staff_roles}'
                 )
                 user_roles = set(request.roles)
-                log.info(
+                log.debug(
                     f'KeycloakAuthentication._user_toggle_is_staff | {user} | '
                     f'user_roles: {user_roles}'
                 )
@@ -232,5 +232,6 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     user.save()
         except Exception as e:
             log.warn(
-                f'KeycloakAuthentication._user_toggle_is_staff | Exception: {e}'
+                'KeycloakAuthentication._user_toggle_is_staff | '
+                f'Exception: {e}'
             )
