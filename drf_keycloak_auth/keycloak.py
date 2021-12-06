@@ -7,20 +7,45 @@ from keycloak import KeycloakOpenID
 from .settings import api_settings
 from . import __title__
 
+from django.http import HttpRequest
+
 log = logging.getLogger(__title__)
 
-try:
-    keycloak_openid = KeycloakOpenID(
-        server_url=api_settings.KEYCLOAK_SERVER_URL,
-        realm_name=api_settings.KEYCLOAK_REALM,
-        client_id=api_settings.KEYCLOAK_CLIENT_ID,
-        client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
-    )
-except KeyError as e:
-    raise KeyError(
-        f'invalid settings: {e}'
-    )
 
+def get_keycloak_openid(request: HttpRequest=None) -> KeycloakOpenID:
+    keycloak_realm = api_settings.KEYCLOAK_REALM
+    keycloak_client_id = api_settings.KEYCLOAK_CLIENT_ID
+    keycloak_client_secret_key = api_settings.KEYCLOAK_CLIENT_SECRET_KEY
+    try:
+        if request:
+            if request.headers.get('X-KeyCloak-Realm'):
+                keycloak_realm = request.headers['X-KeyCloak-Realm']
+
+            if request.headers.get('X-KeyCloak-Client-Id'):
+                keycloak_client_id = request.headers['X-KeyCloak-Client-Id']
+
+            if request.headers.get('X-KeyCloak-Client-Secret-Key'):
+                keycloak_client_secret_key = request.headers['X-KeyCloak-Client-Secret-Key']
+
+        log.info(
+            'get_keycloak_openid:'
+            f'Realm={keycloak_realm}'
+        )
+
+        return KeycloakOpenID(
+            server_url=api_settings.KEYCLOAK_SERVER_URL,
+            realm_name=keycloak_realm,
+            client_id=keycloak_client_id,
+            client_secret_key=keycloak_client_secret_key
+        )
+    except KeyError as e:
+        raise KeyError(
+            f'invalid settings: {e}'
+        )
+
+# DEPRECATE?
+#keycloak_openid = get_keycloak_openid()
+keycloak_openid = None
 
 def get_resource_roles(decoded_token: Dict) -> List[str]:
     # Get roles from access token

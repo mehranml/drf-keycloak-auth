@@ -10,7 +10,7 @@ from rest_framework import (
     exceptions,
 )
 
-from .keycloak import keycloak_openid, get_resource_roles, add_role_prefix
+from .keycloak import get_keycloak_openid, get_resource_roles, add_role_prefix
 from .settings import api_settings
 from . import __title__
 
@@ -21,7 +21,11 @@ User = get_user_model()
 class KeycloakAuthentication(authentication.TokenAuthentication):
     keyword = api_settings.KEYCLOAK_AUTH_HEADER_PREFIX
 
+    keycloak_openid = None
+
     def authenticate(self, request):
+        self.keycloak_openid = get_keycloak_openid(request)
+
         credentials = super().authenticate(request)
         if credentials:
             user, decoded_token = credentials
@@ -71,7 +75,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         TODO: can we cache well-known for faster handling?
         """
         try:
-            return keycloak_openid.introspect(token)
+            return self.keycloak_openid.introspect(token)
         except Exception as e:
             raise Exception(e)
 
