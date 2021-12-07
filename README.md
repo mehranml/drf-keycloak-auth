@@ -114,8 +114,40 @@ If your user model doesn't / can't have a UUID primary key, override the `KEYCLO
 KEYCLOAK_DJANGO_USER_UUID_FIELD = 'uuid'
 ```
 
-
 Voila!
+
+
+## Multi tennancy support
+
+An application can be configured for multiple tenancies by using different Keycloak Realms on the same or seperate Keycloak instances by using the environment var `KEYCLOAK_MULTI_OIDC_JSON`
+
+The client OIDC adaptor json file can be downloaded from Keycloak.
+
+```
+KEYCLOAK_MULTI_OIDC_JSON=
+[
+{ OIDC adaptor json },
+{ OIDC adaptor json },
+]
+```
+
+KeycloakMultiAuthentication should instead be configured as the authentication class.
+
+```
+REST_FRAMEWORK = {
+  ...
+  'DEFAULT_AUTHENTICATION_CLASSES': [
+    ...
+    'rest_framework.authentication.SessionAuthentication',
+    'drf_keycloak_auth.authentication.KeycloakMultiAuthentication',
+  ]
+}
+```
+___
+NOTE: This will ignore `DEFAULTS` parameters for hostname, realm and client credentials.  All other parameters are still shared accross tenancies.
+
+___
+
 
 ## Contributing
 
