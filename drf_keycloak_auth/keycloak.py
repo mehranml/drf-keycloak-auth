@@ -13,11 +13,15 @@ log = logging.getLogger(__title__)
 
 
 def get_keycloak_openid(request: HttpRequest=None) -> KeycloakOpenID:
+    server_url = api_settings.KEYCLOAK_SERVER_URL
     keycloak_realm = api_settings.KEYCLOAK_REALM
     keycloak_client_id = api_settings.KEYCLOAK_CLIENT_ID
     keycloak_client_secret_key = api_settings.KEYCLOAK_CLIENT_SECRET_KEY
     try:
         if request:
+            if request.headers.get('X-KeyCloak-Server-Url'):
+                server_url = request.headers['X-KeyCloak-Server-Url']
+
             if request.headers.get('X-KeyCloak-Realm'):
                 keycloak_realm = request.headers['X-KeyCloak-Realm']
 
@@ -33,7 +37,7 @@ def get_keycloak_openid(request: HttpRequest=None) -> KeycloakOpenID:
         )
 
         return KeycloakOpenID(
-            server_url=api_settings.KEYCLOAK_SERVER_URL,
+            server_url=server_url,
             realm_name=keycloak_realm,
             client_id=keycloak_client_id,
             client_secret_key=keycloak_client_secret_key
