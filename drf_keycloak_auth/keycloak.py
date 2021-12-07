@@ -2,45 +2,37 @@
 from typing import Dict, List
 import logging
 
+import os
+
 from keycloak import KeycloakOpenID
 
 from .settings import api_settings
 from . import __title__
 
-from django.http import HttpRequest
+from pprint import pprint
 
 log = logging.getLogger(__title__)
 
-
-def get_keycloak_openid(request: HttpRequest=None) -> KeycloakOpenID:
-    server_url = api_settings.KEYCLOAK_SERVER_URL
-    keycloak_realm = api_settings.KEYCLOAK_REALM
-    keycloak_client_id = api_settings.KEYCLOAK_CLIENT_ID
-    keycloak_client_secret_key = api_settings.KEYCLOAK_CLIENT_SECRET_KEY
+def get_keycloak_openid(oidc: dict=None) -> KeycloakOpenID:
     try:
-        if request:
-            if request.headers.get('X-KeyCloak-Server-Url'):
-                server_url = request.headers['X-KeyCloak-Server-Url']
+        if oidc:
+            log.info(
+                'get_keycloak_openid: '
+                f'realm={oidc["realm"]}'
+            )
 
-            if request.headers.get('X-KeyCloak-Realm'):
-                keycloak_realm = request.headers['X-KeyCloak-Realm']
-
-            if request.headers.get('X-KeyCloak-Client-Id'):
-                keycloak_client_id = request.headers['X-KeyCloak-Client-Id']
-
-            if request.headers.get('X-KeyCloak-Client-Secret-Key'):
-                keycloak_client_secret_key = request.headers['X-KeyCloak-Client-Secret-Key']
-
-        log.info(
-            'get_keycloak_openid:'
-            f'Realm={keycloak_realm}'
-        )
+            return KeycloakOpenID(
+                server_url=oidc["auth-server-url"],
+                realm_name=oidc["realm"],
+                client_id=oidc["resource"],
+                client_secret_key=oidc["credentials"]["secret"]
+            )
 
         return KeycloakOpenID(
-            server_url=server_url,
-            realm_name=keycloak_realm,
-            client_id=keycloak_client_id,
-            client_secret_key=keycloak_client_secret_key
+            server_url=api_settings.KEYCLOAK_SERVER_URL,
+            realm_name=api_settings.KEYCLOAK_REALM,
+            client_id=api_settings.KEYCLOAK_CLIENT_ID,
+            client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
         )
     except KeyError as e:
         raise KeyError(
