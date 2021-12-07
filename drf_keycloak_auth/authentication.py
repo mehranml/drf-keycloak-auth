@@ -25,7 +25,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     keycloak_openid = None
 
-    def __init__(self, keycloak_openid: KeycloakOpenID=None):
+    def __init__(self, keycloak_openid: KeycloakOpenID = None):
         if keycloak_openid is not None:
             self.keycloak_openid = keycloak_openid
         else:
@@ -259,7 +259,7 @@ class KeycloakMultiAuthentication():
 
         for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
             try:
-                auth = KeycloakAuthentication(get_keycloak_openid(oidc));
+                auth = KeycloakAuthentication(get_keycloak_openid(oidc))
                 credentials = auth.authenticate(request)
                 if credentials:
                     return credentials
@@ -275,5 +275,3 @@ class KeycloakMultiAuthentication():
         #     raise exceptions.AuthenticationFailed('invalid or expired token')
 
         return None
-
-

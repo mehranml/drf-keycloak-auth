@@ -10,7 +10,8 @@ from . import __title__
 
 log = logging.getLogger(__title__)
 
-def get_keycloak_openid(oidc: dict=None) -> KeycloakOpenID:
+
+def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
     try:
         if oidc:
             log.info(
@@ -36,9 +37,10 @@ def get_keycloak_openid(oidc: dict=None) -> KeycloakOpenID:
             f'invalid settings: {e}'
         )
 
+
 # DEPRECATE?
-#keycloak_openid = get_keycloak_openid()
 keycloak_openid = None
+
 
 def get_resource_roles(decoded_token: Dict) -> List[str]:
     # Get roles from access token
