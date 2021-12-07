@@ -2,14 +2,11 @@
 from typing import Dict, List
 import logging
 
-import os
-
 from keycloak import KeycloakOpenID
 
 from .settings import api_settings
 from . import __title__
 
-from pprint import pprint
 
 log = logging.getLogger(__title__)
 
