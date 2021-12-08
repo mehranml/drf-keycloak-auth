@@ -10,7 +10,9 @@ from rest_framework import (
     exceptions,
 )
 
-from .keycloak import keycloak_openid, get_resource_roles, add_role_prefix
+from keycloak import KeycloakOpenID
+
+from .keycloak import get_keycloak_openid, get_resource_roles, add_role_prefix
 from .settings import api_settings
 from . import __title__
 
@@ -20,6 +22,14 @@ User = get_user_model()
 
 class KeycloakAuthentication(authentication.TokenAuthentication):
     keyword = api_settings.KEYCLOAK_AUTH_HEADER_PREFIX
+
+    keycloak_openid = None
+
+    def __init__(self, keycloak_openid: KeycloakOpenID = None):
+        if keycloak_openid is not None:
+            self.keycloak_openid = keycloak_openid
+        else:
+            self.keycloak_openid = get_keycloak_openid()
 
     def authenticate(self, request):
         credentials = super().authenticate(request)
@@ -71,7 +81,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         TODO: can we cache well-known for faster handling?
         """
         try:
-            return keycloak_openid.introspect(token)
+            return self.keycloak_openid.introspect(token)
         except Exception as e:
             raise Exception(e)
 
@@ -235,3 +245,33 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 'KeycloakAuthentication._user_toggle_is_staff | '
                 f'Exception: {e}'
             )
+
+
+class KeycloakMultiAuthentication():
+
+    def authenticate(self, request):
+        if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
+            log.warn(
+                'KeycloakMultiAuthentication.authenticate | '
+                f'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
+            )
+            return None
+
+        for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
+            try:
+                auth = KeycloakAuthentication(get_keycloak_openid(oidc))
+                credentials = auth.authenticate(request)
+                if credentials:
+                    return credentials
+
+            except Exception as e:
+                log.error(
+                    'KeycloakMultiAuthentication.authenticate | '
+                    f'Exception: {e}'
+                )
+
+        # Uncomment if/when this becomes the only KC auth handler
+        # if authentication.get_authorization_header(request):
+        #     raise exceptions.AuthenticationFailed('invalid or expired token')
+
+        return None

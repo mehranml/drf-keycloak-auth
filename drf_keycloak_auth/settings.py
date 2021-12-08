@@ -5,6 +5,8 @@ import os
 from django.conf import settings
 from rest_framework.settings import APISettings
 
+import json
+
 USER_SETTINGS = getattr(settings, 'DRF_KEYCLOAK_AUTH', None)
 
 # should be comma separated string
@@ -12,6 +14,11 @@ KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF = \
     os.getenv('KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF')
 
 DEFAULTS = {
+    'KEYCLOAK_MULTI_OIDC_JSON': (
+        json.loads(os.getenv('KEYCLOAK_MULTI_OIDC_JSON'))
+        if os.getenv('KEYCLOAK_MULTI_OIDC_JSON')
+        else None
+    ),
     'KEYCLOAK_SERVER_URL': os.getenv('KEYCLOAK_SERVER_URL'),
     'KEYCLOAK_REALM': os.getenv('KEYCLOAK_REALM'),
     'KEYCLOAK_CLIENT_ID': os.getenv('KEYCLOAK_CLIENT_ID'),

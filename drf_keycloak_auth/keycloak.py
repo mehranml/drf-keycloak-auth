@@ -7,19 +7,39 @@ from keycloak import KeycloakOpenID
 from .settings import api_settings
 from . import __title__
 
+
 log = logging.getLogger(__title__)
 
-try:
-    keycloak_openid = KeycloakOpenID(
-        server_url=api_settings.KEYCLOAK_SERVER_URL,
-        realm_name=api_settings.KEYCLOAK_REALM,
-        client_id=api_settings.KEYCLOAK_CLIENT_ID,
-        client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
-    )
-except KeyError as e:
-    raise KeyError(
-        f'invalid settings: {e}'
-    )
+
+def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
+    try:
+        if oidc:
+            log.info(
+                'get_keycloak_openid: '
+                f'realm={oidc["realm"]}'
+            )
+
+            return KeycloakOpenID(
+                server_url=oidc["auth-server-url"],
+                realm_name=oidc["realm"],
+                client_id=oidc["resource"],
+                client_secret_key=oidc["credentials"]["secret"]
+            )
+
+        return KeycloakOpenID(
+            server_url=api_settings.KEYCLOAK_SERVER_URL,
+            realm_name=api_settings.KEYCLOAK_REALM,
+            client_id=api_settings.KEYCLOAK_CLIENT_ID,
+            client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
+        )
+    except KeyError as e:
+        raise KeyError(
+            f'invalid settings: {e}'
+        )
+
+
+# DEPRECATE?
+keycloak_openid = None
 
 
 def get_resource_roles(decoded_token: Dict) -> List[str]:
