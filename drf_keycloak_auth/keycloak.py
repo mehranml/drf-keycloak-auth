@@ -38,8 +38,8 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
         )
 
 
-# DEPRECATE?
-keycloak_openid = None
+# TODO: DEPRECATE?
+keycloak_openid = get_keycloak_openid()
 
 
 def get_resource_roles(decoded_token: Dict) -> List[str]:
