@@ -65,6 +65,12 @@ class UserLoginTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+    # def test_user_has_admin_role(self):
+    #     pass
+
+
+        
+
     def __get_token(self, keycloak_openid):
         response = requests.post(
             f'{keycloak_openid.connection.base_url}realms/{keycloak_openid.realm_name}/protocol/openid-connect/token',

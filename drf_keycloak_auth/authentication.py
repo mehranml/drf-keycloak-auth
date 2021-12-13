@@ -167,7 +167,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         """ try to add roles from authenticated keycloak user """
         roles = []
         try:
-            roles += get_resource_roles(decoded_token)
+            roles += get_resource_roles(decoded_token, self.keycloak_openid.client_id)
             roles.append(str(user.pk))
         except Exception as e:
             log.warn(
