@@ -247,7 +247,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             )
 
 
-class KeycloakMultiAuthentication():
+class KeycloakMultiAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
@@ -262,6 +262,10 @@ class KeycloakMultiAuthentication():
                 auth = KeycloakAuthentication(get_keycloak_openid(oidc))
                 credentials = auth.authenticate(request)
                 if credentials:
+                    log.info(
+                        'KeycloakMultiAuthentication.authenticate | '
+                        f'credentials={credentials}'
+                    )
                     return credentials
 
             except Exception as e:
@@ -271,7 +275,7 @@ class KeycloakMultiAuthentication():
                 )
 
         # Uncomment if/when this becomes the only KC auth handler
-        # if authentication.get_authorization_header(request):
-        #     raise exceptions.AuthenticationFailed('invalid or expired token')
+        #if authentication.get_authorization_header(request):
+        #    raise exceptions.AuthenticationFailed('invalid or expired token (no realms authenticated)')
 
         return None

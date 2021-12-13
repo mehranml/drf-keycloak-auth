@@ -16,7 +16,7 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
         if oidc:
             log.info(
                 'get_keycloak_openid: '
-                f'realm={oidc["realm"]}'
+                f'OIDC realm={oidc["realm"]}'
             )
 
             return KeycloakOpenID(
