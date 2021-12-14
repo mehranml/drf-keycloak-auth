@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions
 
-from .authentication import KeycloakMultiAuthentication, KeycloakAuthentication
+from drf_keycloak_auth.authentication import KeycloakMultiAuthentication, KeycloakAuthentication
 
 
 class TestAuth(APIView):

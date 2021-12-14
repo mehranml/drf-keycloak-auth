@@ -11,9 +11,10 @@ from drf_keycloak_auth.settings import DEFAULTS, USER_SETTINGS
 
 # DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-AUTH_USER_MODEL = 'drf_keycloak_auth.CustomUser'
+AUTH_USER_MODEL = 'test.CustomUser'
 
 INSTALLED_APPS = [
+    'test',
     'drf_keycloak_auth',
     'django.contrib.auth',
     'django.contrib.contenttypes'
@@ -26,25 +27,19 @@ DATABASES = {
     }
 }
 
-ROOT_URLCONF = 'drf_keycloak_auth.test_urls'
+ROOT_URLCONF = 'test.urls'
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = 'random_key'
 
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # for browseable api
-        # 'rest_framework.authentication.SessionAuthentication',
         # 'drf_keycloak_auth.authentication.KeycloakAuthentication',
         # 'drf_keycloak_auth.authentication.KeycloakMultiAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAdminUser',
-    ],
-    'DEFAULT_PAGINATION_CLASS': (
-        'rest_framework.pagination.PageNumberPagination'
-    ),
-    'PAGE_SIZE': 10
+    ]
 }
 
 # List of settings that may be in string import notation.
@@ -72,6 +67,5 @@ LOGGING = {
         }
     },
 }
-
 
 api_settings = APISettings(USER_SETTINGS, DEFAULTS, IMPORT_STRINGS)

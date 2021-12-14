@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status, exceptions
 
-from .test_settings import api_settings
+from test.settings import api_settings
 from .keycloak import get_keycloak_openid
 
 log = logging.getLogger('drf_keycloak_auth')
