@@ -69,7 +69,8 @@ class UserLoginTestCase(APITestCase):
 
     def __get_token(self, keycloak_openid):
         response = requests.post(
-            f'{keycloak_openid.connection.base_url}realms/{keycloak_openid.realm_name}/protocol/openid-connect/token',
+            f'{keycloak_openid.connection.base_url}realms/'
+            f'{keycloak_openid.realm_name}/protocol/openid-connect/token',
             data={
                 'client_id': {keycloak_openid.client_id},
                 'client_secret': {keycloak_openid.client_secret_key},
