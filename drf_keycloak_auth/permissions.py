@@ -62,6 +62,7 @@ class HasServiceGroup(BaseGroupBasedPermission):
 
 class HasOwnerGroup(permissions.BasePermission):
     """ validate auth user is obj.owner """
+
     def has_object_permission(self, request, view, obj):
         required_groups = [str(obj.owner.pk)]
         log.info(
@@ -117,6 +118,7 @@ class HasServiceRole(BaseRoleBasedPermission):
 
 class HasOwnerRole(permissions.BasePermission):
     """ validate auth user is obj.owner """
+
     def has_object_permission(self, request, view, obj):
         required_roles = [str(obj.owner.pk)]
         log.info(

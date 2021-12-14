@@ -12,9 +12,10 @@ class TestAuth(APIView):
     def get(self, request, format=None):
         return Response({'status': 'ok'})
 
+
 class TestAuthMultiOIDC(APIView):
     authentication_classes = [KeycloakMultiAuthentication]
-    #permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, format=None):
         return Response({'status': 'ok'})

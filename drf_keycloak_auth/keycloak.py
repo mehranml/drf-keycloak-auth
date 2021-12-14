@@ -42,7 +42,7 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
 keycloak_openid = get_keycloak_openid()
 
 
-def get_resource_roles(decoded_token: Dict, client_id = None) -> List[str]:
+def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
     """
     Get roles from access token
     """

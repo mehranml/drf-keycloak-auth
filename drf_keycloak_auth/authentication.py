@@ -167,7 +167,10 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         """ try to add roles from authenticated keycloak user """
         roles = []
         try:
-            roles += get_resource_roles(decoded_token, self.keycloak_openid.client_id)
+            roles += get_resource_roles(
+                decoded_token,
+                self.keycloak_openid.client_id
+            )
             roles.append(str(user.pk))
         except Exception as e:
             log.warn(
@@ -273,9 +276,11 @@ class KeycloakMultiAuthentication(authentication.BaseAuthentication):
                     'KeycloakMultiAuthentication.authenticate | '
                     f'Exception: {e}'
                 )
-
+        #
         # Uncomment if/when this becomes the only KC auth handler
-        #if authentication.get_authorization_header(request):
-        #    raise exceptions.AuthenticationFailed('invalid or expired token (no realms authenticated)')
+        # if authentication.get_authorization_header(request):
+        #    raise exceptions.AuthenticationFailed(
+        #       'invalid or expired token (no realms authenticated)
+        # ')
 
         return None

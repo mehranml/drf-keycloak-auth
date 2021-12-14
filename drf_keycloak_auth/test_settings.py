@@ -9,7 +9,7 @@ import json
 
 from drf_keycloak_auth.settings import DEFAULTS, USER_SETTINGS
 
-#DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+# DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 AUTH_USER_MODEL = 'drf_keycloak_auth.CustomUser'
 
@@ -34,9 +34,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # for browseable api
-        #'rest_framework.authentication.SessionAuthentication',
-        #'drf_keycloak_auth.authentication.KeycloakAuthentication',
-        #'drf_keycloak_auth.authentication.KeycloakMultiAuthentication'
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'drf_keycloak_auth.authentication.KeycloakAuthentication',
+        # 'drf_keycloak_auth.authentication.KeycloakMultiAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAdminUser',

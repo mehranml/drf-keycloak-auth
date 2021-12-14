@@ -14,22 +14,23 @@ log = logging.getLogger('drf_keycloak_auth')
 
 class UserLoginTestCase(APITestCase):
 
-    #def setUp(self):
+    # def setUp(self):
 
     @classmethod
     def setUpClass(self):
         super().setUpClass()
-        self.client = APIClient(raise_request_exception = False)
-
+        self.client = APIClient(raise_request_exception=False)
 
     def test_login_authentication(self):
         self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.__get_token(get_keycloak_openid()))
+        self.client.credentials(
+            HTTP_AUTHORIZATION='Bearer '
+            + self.__get_token(get_keycloak_openid())
+        )
         response = self.client.get('/test_auth/')
 
-        #log.debug(response)
+        # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
 
     def test_login_authentication_invalid_token(self):
         self.client = APIClient()
@@ -38,24 +39,23 @@ class UserLoginTestCase(APITestCase):
 
         self.assertRaises(exceptions.AuthenticationFailed)
 
-
     def test_login_multi_authentication(self):
-        keycloak_openid = get_keycloak_openid(api_settings.KEYCLOAK_MULTI_OIDC_JSON[0])
+        keycloak_openid = get_keycloak_openid(
+            api_settings.KEYCLOAK_MULTI_OIDC_JSON[0])
 
         self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.__get_token(keycloak_openid))
+        self.client.credentials(
+            HTTP_AUTHORIZATION='Bearer ' + self.__get_token(keycloak_openid))
         response = self.client.get('/test_auth_multi_oidc/')
 
-        #log.debug(response)
+        # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
 
     def test_login_multi_authentication_invalid_token(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + 'bad-token')
         response = self.client.get('/test_auth_multi_oidc/')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
 
     def test_login_multi_authentication_no_token(self):
         self.client = APIClient()
@@ -64,24 +64,20 @@ class UserLoginTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-
     # def test_user_has_admin_role(self):
     #     pass
-
-
-        
 
     def __get_token(self, keycloak_openid):
         response = requests.post(
             f'{keycloak_openid.connection.base_url}realms/{keycloak_openid.realm_name}/protocol/openid-connect/token',
-            data = { 
+            data={
                 'client_id': {keycloak_openid.client_id},
                 'client_secret': {keycloak_openid.client_secret_key},
                 'grant_type': 'password',
-                'username': 'admin@example.com',  #os.getenv('TEST_USERNAME')
-                'password': 'adminrole'           #os.getenv('TEST_PASSWORD')
+                'username': 'admin@example.com',  # os.getenv('TEST_USERNAME')
+                'password': 'adminrole'  # os.getenv('TEST_PASSWORD')
             },
-            headers = {
+            headers={
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json'
             }
