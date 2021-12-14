@@ -75,8 +75,8 @@ class UserLoginTestCase(APITestCase):
                 'client_id': {keycloak_openid.client_id},
                 'client_secret': {keycloak_openid.client_secret_key},
                 'grant_type': 'password',
-                'username': 'admin@example.com',  # os.getenv('TEST_USERNAME')
-                'password': 'adminrole'  # os.getenv('TEST_PASSWORD')
+                'username': os.getenv('TEST_USERNAME'),
+                'password': os.getenv('TEST_PASSWORD')
             },
             headers={
                 'Content-Type': 'application/x-www-form-urlencoded',
