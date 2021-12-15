@@ -10,8 +10,6 @@ from rest_framework import (
     exceptions,
 )
 
-from keycloak import KeycloakOpenID
-
 from .keycloak import get_keycloak_openid, get_resource_roles, add_role_prefix
 from .settings import api_settings
 from . import __title__
@@ -25,11 +23,8 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     keycloak_openid = None
 
-    def __init__(self, keycloak_openid: KeycloakOpenID = None):
-        if keycloak_openid is not None:
-            self.keycloak_openid = keycloak_openid
-        else:
-            self.keycloak_openid = get_keycloak_openid()
+    def __init__(self):
+        self.keycloak_openid = get_keycloak_openid()
 
     def authenticate(self, request):
         credentials = super().authenticate(request)
@@ -250,26 +245,27 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             )
 
 
-class KeycloakMultiAuthentication(authentication.BaseAuthentication):
+class KeycloakMultiAuthentication(KeycloakAuthentication):
 
     def authenticate(self, request):
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
             log.warn(
                 'KeycloakMultiAuthentication.authenticate | '
-                f'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
+                'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
             return None
 
+        credentials = None
         for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
             try:
-                auth = KeycloakAuthentication(get_keycloak_openid(oidc))
-                credentials = auth.authenticate(request)
+                self.keycloak_openid = get_keycloak_openid(oidc)
+                credentials = super().authenticate(request)
                 if credentials:
                     log.info(
                         'KeycloakMultiAuthentication.authenticate | '
                         f'credentials={credentials}'
                     )
-                    return credentials
+                    break
 
             except Exception as e:
                 log.error(
@@ -283,4 +279,4 @@ class KeycloakMultiAuthentication(authentication.BaseAuthentication):
         #       'invalid or expired token (no realms authenticated)
         # ')
 
-        return None
+        return credentials
