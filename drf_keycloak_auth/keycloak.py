@@ -16,7 +16,7 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
         if oidc:
             log.info(
                 'get_keycloak_openid: '
-                f'realm={oidc["realm"]}'
+                f'OIDC realm={oidc["realm"]}'
             )
 
             return KeycloakOpenID(
@@ -42,13 +42,19 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
 keycloak_openid = get_keycloak_openid()
 
 
-def get_resource_roles(decoded_token: Dict) -> List[str]:
-    # Get roles from access token
+def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
+    """
+    Get roles from access token
+    """
     resource_access_roles = []
     try:
+        if client_id is None:
+            client_id = api_settings.KEYCLOAK_CLIENT_ID
+
+        log.debug(f'{__name__} - get_resource_roles - client_id: {client_id}')
         resource_access_roles = (
             decoded_token['resource_access']
-            [api_settings.KEYCLOAK_CLIENT_ID]
+            [client_id]
             ['roles']
         )
         roles = add_role_prefix(resource_access_roles)

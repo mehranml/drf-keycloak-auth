@@ -10,8 +10,6 @@ from rest_framework import (
     exceptions,
 )
 
-from keycloak import KeycloakOpenID
-
 from .keycloak import get_keycloak_openid, get_resource_roles, add_role_prefix
 from .settings import api_settings
 from . import __title__
@@ -25,11 +23,8 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     keycloak_openid = None
 
-    def __init__(self, keycloak_openid: KeycloakOpenID = None):
-        if keycloak_openid is not None:
-            self.keycloak_openid = keycloak_openid
-        else:
-            self.keycloak_openid = get_keycloak_openid()
+    def __init__(self):
+        self.keycloak_openid = get_keycloak_openid()
 
     def authenticate(self, request):
         credentials = super().authenticate(request)
@@ -167,7 +162,10 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         """ try to add roles from authenticated keycloak user """
         roles = []
         try:
-            roles += get_resource_roles(decoded_token)
+            roles += get_resource_roles(
+                decoded_token,
+                self.keycloak_openid.client_id
+            )
             roles.append(str(user.pk))
         except Exception as e:
             log.warn(
@@ -247,31 +245,38 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             )
 
 
-class KeycloakMultiAuthentication():
+class KeycloakMultiAuthentication(KeycloakAuthentication):
 
     def authenticate(self, request):
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
             log.warn(
                 'KeycloakMultiAuthentication.authenticate | '
-                f'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
+                'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
             return None
 
+        credentials = None
         for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
             try:
-                auth = KeycloakAuthentication(get_keycloak_openid(oidc))
-                credentials = auth.authenticate(request)
+                self.keycloak_openid = get_keycloak_openid(oidc)
+                credentials = super().authenticate(request)
                 if credentials:
-                    return credentials
+                    log.info(
+                        'KeycloakMultiAuthentication.authenticate | '
+                        f'credentials={credentials}'
+                    )
+                    break
 
             except Exception as e:
                 log.error(
                     'KeycloakMultiAuthentication.authenticate | '
                     f'Exception: {e}'
                 )
-
+        #
         # Uncomment if/when this becomes the only KC auth handler
         # if authentication.get_authorization_header(request):
-        #     raise exceptions.AuthenticationFailed('invalid or expired token')
+        #    raise exceptions.AuthenticationFailed(
+        #       'invalid or expired token (no realms authenticated)
+        # ')
 
-        return None
+        return credentials

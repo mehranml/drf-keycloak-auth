@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from os import path
 import setuptools
 
@@ -27,7 +28,8 @@ setuptools.setup(
     install_requires=[
         'djangorestframework>=3.9,<4',
         'python-keycloak>=0.22.0,<1',
-        'django>=2'
+        'django>=2',
+        'pytz'
     ],
     keywords=[
         'drf',
