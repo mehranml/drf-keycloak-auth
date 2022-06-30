@@ -6,8 +6,8 @@ from django.test import TestCase
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status, exceptions
 
-from test.settings import api_settings
-from .keycloak import get_keycloak_openid
+from settings import api_settings
+from drf_keycloak_auth.keycloak import get_keycloak_openid
 
 log = logging.getLogger('drf_keycloak_auth')
 
@@ -52,13 +52,13 @@ class UserLoginTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + 'bad-token')
         response = self.client.get('/test_auth_multi_oidc/')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_login_multi_authentication_no_token(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + '')
         response = self.client.get('/test_auth_multi_oidc/')
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # def test_user_has_admin_role(self):
     #     pass
@@ -71,8 +71,8 @@ class UserLoginTestCase(APITestCase):
                 'client_id': {keycloak_openid.client_id},
                 'client_secret': {keycloak_openid.client_secret_key},
                 'grant_type': 'password',
-                'username': os.getenv('TEST_USERNAME'),
-                'password': os.getenv('TEST_PASSWORD')
+                'username': os.getenv('EC_TEST_USERNAME'),
+                'password': os.getenv('EC_TEST_PASSWORD')
             },
             headers={
                 'Content-Type': 'application/x-www-form-urlencoded',
