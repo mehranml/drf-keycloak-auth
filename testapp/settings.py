@@ -11,10 +11,10 @@ from drf_keycloak_auth.settings import DEFAULTS, USER_SETTINGS
 
 # DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-AUTH_USER_MODEL = 'test.CustomUser'
+AUTH_USER_MODEL = 'testapp.CustomUser'
 
 INSTALLED_APPS = [
-    'test',
+    'testapp',
     'drf_keycloak_auth',
     'django.contrib.auth',
     'django.contrib.contenttypes'
@@ -27,7 +27,7 @@ DATABASES = {
     }
 }
 
-ROOT_URLCONF = 'test.urls'
+ROOT_URLCONF = 'testapp.urls'
 
 SECRET_KEY = 'random_key'
 

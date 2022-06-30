@@ -3,6 +3,7 @@ image: python:3.9
 stages:
   - Static Analysis
   - Bootstrap
+  - unit test
   - sonar
   - Build
   - Publish
@@ -28,6 +29,36 @@ venv:
     refs:
       - tags
       - master
+
+unit test:
+  stage: unit test
+  image: "python:3.8"
+  variables:
+    PYTHONDONTWRITEBYTECODE: 1
+    DEBUG: 1
+    DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1 [::1]"
+    KEYCLOAK_SERVER_URL: https://auth.dev.ecocommons.org.au/auth/
+    KEYCLOAK_REALM: ecocommons-foobar
+    KEYCLOAK_CLIENT_ID: SECURE
+    KEYCLOAK_CLIENT_SECRET_KEY: SECURE
+    KEYCLOAK_MULTI_OIDC_JSON: SECURE
+    EC_TEST_USERNAME: SECURE
+    EC_TEST_PASSWORD: SECURE
+  script:
+    - ./setup.py install
+    - python -m pip install coverage
+    - coverage run --source='./' ./manage.py test testapp ${TEST_ARGS}
+    - coverage report -m
+    - coverage xml
+  allow_failure: true
+  artifacts:
+      when: always
+      reports:
+        junit: xunit-reports/*.xml
+      paths:
+        - coverage.xml
+        - xunit-reports/**
+      expire_in: 1 week
 
 build:
   stage: Build
@@ -72,6 +103,8 @@ sonarqube-check:
   script: 
     - sonar-scanner
   allow_failure: true
+  dependencies:
+    - unit test
   rules:
     - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "main"'
       exists:
