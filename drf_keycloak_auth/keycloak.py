@@ -38,7 +38,7 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
         )
 
 
-# TODO: DEPRECATE?
+# TODO: DEPRECATE. Not compat with OIDC multi
 keycloak_openid = get_keycloak_openid()
 
 
