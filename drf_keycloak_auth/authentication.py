@@ -261,6 +261,12 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
                 self.keycloak_openid = get_keycloak_openid(oidc)
                 credentials = super().authenticate(request)
                 if credentials:
+
+                    # Append realm_name
+                    credentials[1].update(
+                        {'realm_name': self.keycloak_openid.realm_name}
+                    )
+
                     log.info(
                         'KeycloakMultiAuthentication.authenticate | '
                         f'credentials={credentials}'
