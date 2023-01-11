@@ -79,7 +79,7 @@ def _has_required_role(request, required_roles: List[str]) -> bool:
         '_has_required_role | required_roles: '
         f'{required_roles}'
     )
-    roles = getattr(request, 'roles', list())
+    roles = getattr(request, 'roles', [])
     log.info(
         '_has_required_role | request.roles: '
         f'{roles}'

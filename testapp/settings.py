@@ -4,6 +4,7 @@ import os
 
 from django.conf import settings
 from rest_framework.settings import APISettings
+from django.core.management.utils import get_random_secret_key
 
 import json
 
@@ -29,7 +30,7 @@ DATABASES = {
 
 ROOT_URLCONF = 'testapp.urls'
 
-SECRET_KEY = 'random_key'
+SECRET_KEY = get_random_secret_key()
 
 
 REST_FRAMEWORK = {

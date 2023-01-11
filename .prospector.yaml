@@ -1,0 +1,40 @@
+# output-format: json
+
+strictness: medium
+test-warnings: true
+doc-warnings: false
+autodetect: true
+max-line-length: 120
+
+ignore-paths:
+  - (^|/)migrations(/|$)
+  - manage.py
+  - build
+
+# ignore-patterns:
+#   - 
+
+pylint:
+  disable:
+    - unused-import
+    - django-not-configured
+    - f-string-without-interpolation
+    - logging-fstring-interpolation
+    - consider-using-set-comprehension 
+    - unspecified-encoding
+    - invalid-envvar-default
+
+pyflakes:
+  disable:
+    - F541
+    - F811
+    - F401
+
+pycodestyle:
+  disable:
+    - W291
+    - W292
+    - W293
+
+mccabe:
+  run: false

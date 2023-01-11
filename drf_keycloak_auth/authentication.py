@@ -9,13 +9,23 @@ from rest_framework import (
     authentication,
     exceptions,
 )
-
-from .keycloak import get_keycloak_openid, get_resource_roles, add_role_prefix
+from rest_framework.exceptions import AuthenticationFailed
+from keycloak import KeycloakOpenID
+from .keycloak import (
+    get_keycloak_openid,
+    get_resource_roles,
+    add_role_prefix
+)
 from .settings import api_settings
 from . import __title__
 
+
 log = logging.getLogger(__title__)
 User = get_user_model()
+
+
+class OIDCConfigException(Exception):
+    pass
 
 
 class KeycloakAuthentication(authentication.TokenAuthentication):
@@ -23,10 +33,10 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     keycloak_openid = None
 
-    def __init__(self):
-        self.keycloak_openid = get_keycloak_openid()
-
     def authenticate(self, request):
+        if self.keycloak_openid is None:
+            self.keycloak_openid = get_keycloak_openid()
+
         credentials = super().authenticate(request)
         if credentials:
             user, decoded_token = credentials
@@ -39,14 +49,14 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     def authenticate_credentials(
         self,
-        token: str
+        key: str
     ) -> Tuple[AnonymousUser, Dict]:
         """ Attempt to verify JWT from Authorization header with Keycloak """
         log.debug('KeycloakAuthentication.authenticate_credentials')
         try:
             user = None
             # Checks token is active
-            decoded_token = self._get_decoded_token(token)
+            decoded_token = self._get_decoded_token(key)
             self._verify_token_active(decoded_token)
             if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
                 log.debug(
@@ -57,7 +67,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             else:
                 user = self._handle_local_user(decoded_token)
 
-            log.info(
+            log.debug(
                 'KeycloakAuthentication.authenticate_credentials: '
                 f'{user} | {decoded_token}'
             )
@@ -67,24 +77,16 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 'KeycloakAuthentication.authenticate_credentials | '
                 f'Exception: {e}'
             )
-            raise exceptions.AuthenticationFailed()
+            raise AuthenticationFailed() from e
 
-    def _get_decoded_token(self, token: str) -> str:
-        """
-        decode and return dict.
-
-        TODO: can we cache well-known for faster handling?
-        """
-        try:
-            return self.keycloak_openid.introspect(token)
-        except Exception as e:
-            raise Exception(e)
+    def _get_decoded_token(self, token: str) -> dict:
+        return self.keycloak_openid.introspect(token)
 
     def _verify_token_active(self, decoded_token: dict) -> None:
         """ raises if not active """
         is_active = decoded_token.get('active', False)
         if not is_active:
-            raise exceptions.AuthenticationFailed(
+            raise AuthenticationFailed(
                 'invalid or expired token'
             )
 
@@ -96,7 +98,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         if (
             keycloak_username_field
             and
-            type(keycloak_username_field) is str
+            isinstance(keycloak_username_field, str)
         ):
             django_fields['username'] = \
                 decoded_token.get(keycloak_username_field, '')
@@ -120,7 +122,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     setattr(user, key, value)
                     save_model = True
             except Exception:
-                log.warn(
+                log.warning(
                     'KeycloakAuthentication.'
                     '_update_user | '
                     f'setattr: {key} field does not exist'
@@ -142,7 +144,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             user = User.objects.get(**{django_uuid_field: sub})
             user = self._update_user(user, django_fields)
         except ObjectDoesNotExist:
-            log.warn(
+            log.warning(
                 'KeycloakAuthentication._handle_local_user | '
                 f'ObjectDoesNotExist: {sub} does not exist'
             )
@@ -168,12 +170,12 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             )
             roles.append(str(user.pk))
         except Exception as e:
-            log.warn(
+            log.warning(
                 'KeycloakAuthentication._get_roles | '
                 f'Exception: {e}'
             )
 
-        log.info(f'KeycloakAuthentication._get_roles: {roles}')
+        log.debug(f'KeycloakAuthentication._get_roles: {roles}')
         return roles
 
     def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
@@ -201,7 +203,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             # catch None or django.contrib.auth.models.AnonymousUser
             valid_user = bool(
                 user
-                and type(user) is User
+                and isinstance(user, User)
                 and hasattr(user, 'is_staff')
                 and getattr(user, 'is_superuser', False) is False
             )
@@ -239,7 +241,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                     user.is_staff = is_staff
                     user.save()
         except Exception as e:
-            log.warn(
+            log.warning(
                 'KeycloakAuthentication._user_toggle_is_staff | '
                 f'Exception: {e}'
             )
@@ -249,40 +251,83 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
 
     def authenticate(self, request):
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
-            log.warn(
+            log.warning(
                 'KeycloakMultiAuthentication.authenticate | '
                 'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
             return None
 
         credentials = None
-        for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
+
+        def get_host_oidc(hostname: str, oidc_dict: dict) -> KeycloakOpenID:
+            for key, oidc in oidc_dict.items():
+                if key in str(hostname):
+                    log.info(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
+                    return get_keycloak_openid(oidc)
+            return None
+
+        # Resolve OIDC adapter by hostname
+        if isinstance(api_settings.KEYCLOAK_MULTI_OIDC_JSON, dict):
             try:
-                self.keycloak_openid = get_keycloak_openid(oidc)
+                self.keycloak_openid = get_host_oidc(
+                    request.get_host(),
+                    api_settings.KEYCLOAK_MULTI_OIDC_JSON)
+
+                if self.keycloak_openid is None:
+                    raise OIDCConfigException(f"Could not determine OIDC adapter for "
+                                        f"'{str(request.get_host())}'. Trying all")
+
                 credentials = super().authenticate(request)
                 if credentials:
-
                     # Append realm_name
                     credentials[1].update(
                         {'realm_name': self.keycloak_openid.realm_name}
                     )
+                    return credentials
 
-                    log.info(
-                        'KeycloakMultiAuthentication.authenticate | '
-                        f'credentials={credentials}'
-                    )
-                    break
+            except OIDCConfigException as e:
+                log.warning(
+                    'KeycloakMultiAuthentication.authenticate | '
+                    f'OIDCConfigException: {e})'
+                )
+
+            except AuthenticationFailed as e:
+                log.info(
+                    'KeycloakMultiAuthentication.authenticate | '
+                    f'AuthenticationFailed: {e})'
+                )
 
             except Exception as e:
                 log.error(
                     'KeycloakMultiAuthentication.authenticate | '
-                    f'Exception: {e}'
+                    f'Exception: {e})'
                 )
-        #
-        # Uncomment if/when this becomes the only KC auth handler
-        # if authentication.get_authorization_header(request):
-        #    raise exceptions.AuthenticationFailed(
-        #       'invalid or expired token (no realms authenticated)
-        # ')
+
+        # Legacy
+        else:
+            log.info("(Deprecated) Using legacy OIDC authentication")
+            for oidc in api_settings.KEYCLOAK_MULTI_OIDC_JSON:
+                try:
+                    self.keycloak_openid = get_keycloak_openid(oidc)
+
+                    credentials = super().authenticate(request)
+                    if credentials:
+                        # Append realm_name
+                        credentials[1].update(
+                            {'realm_name': self.keycloak_openid.realm_name}
+                        )
+                        break
+
+                except AuthenticationFailed as e:
+                    log.info(
+                        'KeycloakMultiAuthentication.authenticate | '
+                        f'AuthenticationFailed: {e})'
+                    )
+
+                except Exception as e:
+                    log.error(
+                        'KeycloakMultiAuthentication.authenticate | '
+                        f'Exception: {e} ({self.keycloak_openid.realm_name})'
+                    )
 
         return credentials
