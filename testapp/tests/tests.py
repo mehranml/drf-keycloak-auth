@@ -34,7 +34,7 @@ class UserLoginTestCase(APITestCase):
     def test_login_authentication_invalid_token(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + 'bad-token')
         response = self.client.get('/test_auth/')
-
+        del response
         self.assertRaises(exceptions.AuthenticationFailed)
 
     def test_login_multi_authentication(self):

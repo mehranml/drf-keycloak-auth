@@ -9,7 +9,7 @@ from drf_keycloak_auth.authentication import KeycloakMultiAuthentication, Keyclo
 class TestAuth(APIView):
     authentication_classes = [KeycloakAuthentication]
 
-    def get(self, request, format=None):
+    def get(self, request):
         return Response({'status': 'ok'})
 
 
@@ -17,5 +17,5 @@ class TestAuthMultiOIDC(APIView):
     authentication_classes = [KeycloakMultiAuthentication]
     # permission_classes = [permissions.IsAdminUser]
 
-    def get(self, request, format=None):
+    def get(self, request):
         return Response({'status': 'ok'})

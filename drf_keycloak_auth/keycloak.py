@@ -35,11 +35,7 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
     except KeyError as e:
         raise KeyError(
             f'invalid settings: {e}'
-        )
-
-
-# TODO: DEPRECATE. Not compat with OIDC multi
-keycloak_openid = get_keycloak_openid()
+        ) from e
 
 
 def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
@@ -62,7 +58,7 @@ def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
 
         return roles
     except Exception as e:
-        log.warn(f'{__name__} - get_resource_roles - Exception: {e}')
+        log.warning(f'{__name__} - get_resource_roles - Exception: {e}')
         return []
 
 
@@ -83,7 +79,7 @@ def prefix_role(role: str) -> str:
     role_prefix = (
         api_settings.KEYCLOAK_ROLE_SET_PREFIX
         if api_settings.KEYCLOAK_ROLE_SET_PREFIX
-        and type(api_settings.KEYCLOAK_ROLE_SET_PREFIX) is str
+        and isinstance(api_settings.KEYCLOAK_ROLE_SET_PREFIX, str)
         else ''
     )
     return f'{role_prefix}{role}'

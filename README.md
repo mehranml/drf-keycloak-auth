@@ -125,10 +125,10 @@ The client OIDC adaptor json file can be downloaded from Keycloak.
 
 ```
 KEYCLOAK_MULTI_OIDC_JSON=
-[
-{ OIDC adaptor json },
-{ OIDC adaptor json },
-]
+{
+"hostname1": { OIDC adaptor },
+"hostname2": { OIDC adaptor },
+}
 ```
 
 KeycloakMultiAuthentication should instead be configured as the authentication class.

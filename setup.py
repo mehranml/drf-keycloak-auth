@@ -29,6 +29,7 @@ setuptools.setup(
         'djangorestframework>=3.9,<4',
         'python-keycloak>=0.22.0,<1',
         'django>=2',
+        'urllib3<1.27,>=1.21.1',
         'pytz'
     ],
     keywords=[
