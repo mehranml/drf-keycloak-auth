@@ -131,7 +131,7 @@ KEYCLOAK_MULTI_OIDC_JSON=
 }
 ```
 
-KeycloakMultiAuthentication should instead be configured as the authentication class.
+KeycloakMultiAuthentication should be configured as the authentication class. 
 
 ```
 REST_FRAMEWORK = {
@@ -145,7 +145,7 @@ REST_FRAMEWORK = {
 ```
 ___
 NOTE: This will ignore `DEFAULTS` parameters for hostname, realm and client credentials.  All other parameters are still shared accross tenancies.
-
+NOTE2: `KeycloakAuthentication` can still be present as a fallback for simpler cases like local dev.
 ___
 
 
