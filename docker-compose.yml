@@ -18,4 +18,4 @@ services:
     working_dir: /srv/app/
     volumes:
       - '.:/srv/app:cached'
-    command: './manage.py test -v=2'
+    command: './manage.py runserver'

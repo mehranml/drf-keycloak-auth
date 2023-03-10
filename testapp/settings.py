@@ -27,6 +27,7 @@ DATABASES = {
         'NAME': 'testdatabase',
     }
 }
+DEBUG = True
 
 ROOT_URLCONF = 'testapp.urls'
 
