@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM python:3.10-slim-buster
 
 ARG SRC_DIR=.
 ARG BUILD_DIR=/srv/app

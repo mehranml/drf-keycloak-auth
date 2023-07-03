@@ -1,5 +1,6 @@
 """ module for app specific keycloak connection """
 from typing import Dict, List
+import traceback
 import logging
 
 from keycloak import KeycloakOpenID
@@ -18,7 +19,6 @@ def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
                 'get_keycloak_openid: '
                 f'OIDC realm={oidc["realm"]}'
             )
-
             return KeycloakOpenID(
                 server_url=oidc["auth-server-url"],
                 realm_name=oidc["realm"],
@@ -48,24 +48,26 @@ def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
             client_id = api_settings.KEYCLOAK_CLIENT_ID
 
         log.debug(f'{__name__} - get_resource_roles - client_id: {client_id}')
+
         resource_access_roles = (
-            decoded_token['resource_access']
-            [client_id]
-            ['roles']
+            decoded_token
+            .get('resource_access', {})
+            .get(client_id, {})
+            .get('roles', [])
         )
-        roles = add_role_prefix(resource_access_roles)
+        roles = add_roles_prefix(resource_access_roles)
         log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
 
         return roles
+
     except Exception as e:
-        log.warning(f'{__name__} - get_resource_roles - Exception: {e}')
+        log.warning(f'{__name__} - get_resource_roles - Exception: ({str(type(e).__name__ )}) {e}\n'
+                    f'{traceback.format_exc()}')
         return []
 
 
-def add_role_prefix(roles: List[str]) -> List[str]:
-    """
-    add role prefix configured by KEYCLOAK_ROLE_SET_PREFIX to a list of roles
-    """
+def add_roles_prefix(roles: List[str]) -> List[str]:
+    """ add role prefix configured by KEYCLOAK_ROLE_SET_PREFIX to a list of roles """
     log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
     prefixed_roles = [prefix_role(x) for x in roles]
     log.debug(

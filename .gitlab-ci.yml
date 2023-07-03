@@ -1,5 +1,5 @@
 variables:
-  PY_VERSION: "3.8"
+  PY_VERSION: "3.10"
   PY_IMAGE: "python:${PY_VERSION}"
 
 include:
@@ -17,6 +17,18 @@ stages:
   - test
   - sonar
   - publish
+
+check dependencies:
+  stage: static analysis
+  image: "${PY_IMAGE}"
+  before_script:
+    - ./setup.py install
+    - pip install safety
+  script:
+    - safety check
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
+  rules:
+    - if: '$CI'
 
 prospector:
   stage: static analysis
@@ -76,7 +88,10 @@ unit test:
         - coverage.xml
         - xunit-reports/**
       expire_in: 1 week
-
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
+  rules:
+    - if: '$CI'
+    
 build:
   stage: build
   image: "${PY_IMAGE}"
