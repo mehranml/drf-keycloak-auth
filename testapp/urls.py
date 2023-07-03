@@ -14,4 +14,6 @@ urlpatterns = [
     path('test_auth/', views.TestAuth.as_view(), name='test_auth'),
     path('test_auth_multi_oidc/', views.TestAuthMultiOIDC.as_view(),
          name='test_auth_multi_oidc'),
+    path('test_auth_role_admin/', views.TestAuthRoleAdmin.as_view(), name='test_auth_role_admin'),
+
 ]
