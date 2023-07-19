@@ -73,6 +73,8 @@ unit test:
     KEYCLOAK_MULTI_OIDC_JSON: SECURE
     EC_TEST_USERNAME: SECURE
     EC_TEST_PASSWORD: SECURE
+    USER_TEST_USERNAME: SECURE
+    USER_TEST_PASSWORD: SECURE
   script:
     - ./setup.py install
     - python -m pip install coverage
