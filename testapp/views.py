@@ -13,7 +13,6 @@ class TestAuth(APIView):
     def get(self, request):
         return Response({'status': 'ok'})
 
-
 class TestAuthMultiOIDC(APIView):
     authentication_classes = [KeycloakMultiAuthentication]
     permission_classes = [permissions.IsAuthenticated]

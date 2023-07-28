@@ -1,6 +1,5 @@
-## [0.3.0]
-- Using KEYCLOAK_MULTI_OIDC_JSON will prefix django username with realm: and also save 'realm' field if defined
-- Refactor Keycloak functions to be more portable and generic
+## [0.2.1]
+- Add realm name prefix to User.username when using KEYCLOAK_MULTI_OIDC_JSON
 
 ## [0.2.0]
 - Upgrade python_keycloak 3.3
