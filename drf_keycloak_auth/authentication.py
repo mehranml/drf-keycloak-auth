@@ -1,6 +1,7 @@
 """ add a keycloak authentication class specific to Django Rest Framework """
 from typing import Tuple, Dict, List
 import logging
+import re
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import AnonymousUser, update_last_login, Group
@@ -12,6 +13,7 @@ from rest_framework import (
 from rest_framework.exceptions import AuthenticationFailed
 from keycloak import KeycloakOpenID
 from .keycloak import (
+    OIDCConfigException,
     get_keycloak_openid,
     get_resource_roles,
     add_roles_prefix
@@ -22,10 +24,6 @@ from . import __title__
 
 log = logging.getLogger(__title__)
 User = get_user_model()
-
-
-class OIDCConfigException(Exception):
-    pass
 
 
 class KeycloakAuthentication(authentication.TokenAuthentication):
@@ -93,18 +91,44 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 'invalid or expired token'
             )
 
+    def _add_realm_prefix(self, value: str) -> str:
+        """ Add 'REALM_NAME:' prefix to a string value.
+            This only works if using KEYCLOAK_MULTI_OIDC_JSON
+            
+            Checks to ensure the prefix is not already added.
+            :param value: The string to prefix
+            :returns: Prefixed string
+        """
+        if not api_settings.KEYCLOAK_MULTI_OIDC_JSON:
+            return value
+
+        if not self.keycloak_openid.realm_name:
+            log.warning(f"Cannot add realm prefix. Realm missing!")
+            return value
+
+        prefix = str(self.keycloak_openid.realm_name)+':'
+        if re.search('^'+prefix, value):
+            log.debug(f"Value '{str(value)}' already has realm prefix")
+            return value
+
+        return prefix+str(value)
+
     def _map_keycloak_to_django_fields(self, decoded_token: dict) -> dict:
+        """ Map Keycloak access_token fields to Django User attributes """
         django_fields = {}
-        keycloak_username_field = \
+        kc_username_field = \
             api_settings.KEYCLOAK_FIELD_AS_DJANGO_USERNAME
 
         if (
-            keycloak_username_field
+            kc_username_field
             and
-            isinstance(keycloak_username_field, str)
+            isinstance(kc_username_field, str)
         ):
             django_fields['username'] = \
-                decoded_token.get(keycloak_username_field, '')
+                self._add_realm_prefix(decoded_token.get(kc_username_field, ''))
+
+        # ecocommons_user.CustomUser field
+        django_fields['realm'] = str(self.keycloak_openid.realm_name)
 
         django_fields['email'] = decoded_token.get('email', '')
 
@@ -148,13 +172,15 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         try:
             user = User.objects.get(**{django_uuid_field: sub})
             user = self._update_user(user, django_fields)
+
         except ObjectDoesNotExist:
             log.warning(
                 'KeycloakAuthentication._handle_local_user | '
-                f'ObjectDoesNotExist: {sub} does not exist'
+                f'ObjectDoesNotExist: {sub} does not exist - creating'
             )
 
         if user is None:
+            # Add uuid field and create
             django_fields.update(**{django_uuid_field: sub})
             user = User.objects.create_user(**django_fields)
 
@@ -257,7 +283,7 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
 
     def authenticate(self, request):
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
-            log.warning(
+            log.info(
                 'KeycloakMultiAuthentication.authenticate | '
                 'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
@@ -265,29 +291,12 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
 
         credentials = None
 
-        def get_host_oidc(hostname: str, oidc_dict: dict) -> KeycloakOpenID:
-            for key, oidc in oidc_dict.items():
-                if key in str(hostname):
-                    log.info(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
-                    return get_keycloak_openid(oidc)
-            return None
-
-        # Resolve OIDC adapter by hostname
-        if not isinstance(api_settings.KEYCLOAK_MULTI_OIDC_JSON, dict):
-            raise OIDCConfigException(f"OIDC config not available")
-
         try:
-            self.keycloak_openid = get_host_oidc(
-                request.get_host(),
-                api_settings.KEYCLOAK_MULTI_OIDC_JSON)
-
-            if self.keycloak_openid is None:
-                raise OIDCConfigException(f"Could not determine OIDC adapter for "
-                                          f"'{str(request.get_host())}'. Trying all")
+            self.keycloak_openid = get_keycloak_openid(host=request.get_host())
 
             credentials = super().authenticate(request)
             if credentials:
-                # Append realm_name
+                # Append realm_name to credentials returned to view
                 credentials[1].update(
                     {'realm_name': self.keycloak_openid.realm_name}
                 )
@@ -310,6 +319,5 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
                 'KeycloakMultiAuthentication.authenticate | '
                 f'Exception: {e})'
             )
-
 
         return credentials

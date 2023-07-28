@@ -4,24 +4,18 @@ import requests
 import json
 
 from django.test import TestCase, tag
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status, exceptions
 
 from settings import api_settings
 from drf_keycloak_auth.keycloak import get_keycloak_openid
 
+from .dump import dump
+
 log = logging.getLogger('drf_keycloak_auth')
 
-
-def dump(out):
-    try:
-        out = json.dumps(out, indent=4, sort_keys=True)
-    except Exception:
-        pass
-
-    CYAN = '\033[96m'
-    ENDC = '\033[0m'
-    print(CYAN + str(out).replace('\\n', '\n').replace('\\t', '\t') + ENDC)
+User = get_user_model()
 
 
 class UserLoginTestCase(APITestCase):
@@ -33,16 +27,25 @@ class UserLoginTestCase(APITestCase):
         super().setUpClass()
         self.client = APIClient(raise_request_exception=False)
 
-    @tag("ok")
+    @tag("ok", "realm")
     def test_login_authentication(self):
+        keycloak_openid = get_keycloak_openid()
+
         self.client.credentials(
             HTTP_AUTHORIZATION='Bearer '
             + self.__get_token_admin(get_keycloak_openid())
         )
         response = self.client.get('/test_auth/')
-
-        # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Ensure user name has realm prefix 
+        username = 'ecocommons-foobar:admin@example.com'
+
+        # Ensure user realm populated 
+        user = User.objects.filter(username=username).first()
+        dump(user)
+        self.assertIsNotNone(user)
+        self.assertEqual(user.realm, keycloak_openid.realm_name)
 
     @tag("ok")
     def test_login_authentication_invalid_token(self):
@@ -53,8 +56,7 @@ class UserLoginTestCase(APITestCase):
 
     @tag("ok", "multi")
     def test_login_multi_authentication(self):
-        keycloak_openid = get_keycloak_openid(
-            api_settings.KEYCLOAK_MULTI_OIDC_JSON['testserver'])
+        keycloak_openid = get_keycloak_openid('testserver')
 
         self.client.credentials(
             HTTP_AUTHORIZATION='Bearer ' + self.__get_token_admin(keycloak_openid))
@@ -79,8 +81,7 @@ class UserLoginTestCase(APITestCase):
 
     @tag("ok")
     def test_admin_endpoint(self):
-        keycloak_openid = get_keycloak_openid(
-            api_settings.KEYCLOAK_MULTI_OIDC_JSON['testserver'])
+        keycloak_openid = get_keycloak_openid('testserver')
 
         # Admin
         self.client.credentials(

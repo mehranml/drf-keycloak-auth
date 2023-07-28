@@ -11,10 +11,13 @@ services:
       KEYCLOAK_SERVER_URL: https://auth.dev.ecocommons.org.au/auth/
       KEYCLOAK_REALM: ecocommons-foobar
       KEYCLOAK_CLIENT_ID: local-dev-testing
-      # KEYCLOAK_CLIENT_SECRET_KEY: $KEYCLOAK_CLIENT_SECRET_KEY
-      # KEYCLOAK_MULTI_OIDC_JSON: $KEYCLOAK_MULTI_OIDC_JSON
-      # EC_TEST_USERNAME: $EC_TEST_USERNAME
-      # EC_TEST_PASSWORD: $EC_TEST_PASSWORD
+      ### Add these in docker-compose.override.yml
+      # KEYCLOAK_CLIENT_SECRET_KEY: 
+      # KEYCLOAK_MULTI_OIDC_JSON: 
+      # EC_TEST_USERNAME: 
+      # EC_TEST_PASSWORD: 
+      # USER_TEST_USERNAME: 
+      # USER_TEST_PASSWORD: 
     working_dir: /srv/app/
     volumes:
       - '.:/srv/app:cached'
