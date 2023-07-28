@@ -117,7 +117,7 @@ KEYCLOAK_DJANGO_USER_UUID_FIELD = 'uuid'
 Voila!
 
 
-## Multi tennancy support
+## Multi tenancy support
 
 An application can be configured for multiple tenancies by using different Keycloak Realms on the same or seperate Keycloak instances by using the environment var `KEYCLOAK_MULTI_OIDC_JSON`
 
