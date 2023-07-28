@@ -12,18 +12,80 @@ from . import __title__
 log = logging.getLogger(__title__)
 
 
-def get_keycloak_openid(oidc: dict = None) -> KeycloakOpenID:
+class OIDCConfigException(Exception):
+    pass
+
+def get_request_oidc_config(host: str) -> dict:
+    """ Determine client config from request host.
+        :param host: Hostname
+
+        KEYCLOAK_MULTI_OIDC_JSON: {
+            "server": {
+                "auth-server-url":  "https://server/auth/",
+                "realm":            "realm_name",
+                "resource":         "client_id",
+                "credentials": {
+                    "secret": "client_secret"
+                }
+            }
+        }
+    """
+
+    def get_host_oidc(hostname: str, oidc_config_dict: dict) -> dict:
+        for key, config in oidc_config_dict.items():
+            if key in str(hostname):
+                log.info(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
+                return config
+        return None
+
+    if not isinstance(host, str):
+        raise OIDCConfigException(f"Cannot determine OIDC config. Missing 'host'")
+
+    if not isinstance(api_settings.KEYCLOAK_MULTI_OIDC_JSON, dict):
+        raise OIDCConfigException(f"OIDC config KEYCLOAK_MULTI_OIDC_JSON not available")
+
+    oidc_config = get_host_oidc(
+        host,
+        api_settings.KEYCLOAK_MULTI_OIDC_JSON
+        )
+
+    if oidc_config is None:
+        raise OIDCConfigException(f"Could not determine OIDC config for "
+                                  f"'{str(host)}'")
+
+    return oidc_config
+
+
+def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
+    """ 
+        Create a KeycloakOpenID instance from application credentials.
+        :param host: If request host is provided will attempt to set application credentials 
+                        based on a predefined host list.
+                            KEYCLOAK_MULTI_OIDC_JSON
+
+                        otherwise it will fallback to the default configured application credentials
+                            KEYCLOAK_SERVER_URL, 
+                            KEYCLOAK_REALM, 
+                            KEYCLOAK_CLIENT_ID, 
+                            KEYCLOAK_CLIENT_SECRET_KEY
+
+        :returns: KeycloakOpenID
+    """
     try:
-        if oidc:
+        oidc_config = None
+        if isinstance(host, str):
+            oidc_config = get_request_oidc_config(host)
+
+        if oidc_config:
             log.info(
                 'get_keycloak_openid: '
-                f'OIDC realm={oidc["realm"]}'
+                f'OIDC realm={oidc_config["realm"]}'
             )
             return KeycloakOpenID(
-                server_url=oidc["auth-server-url"],
-                realm_name=oidc["realm"],
-                client_id=oidc["resource"],
-                client_secret_key=oidc["credentials"]["secret"]
+                server_url=oidc_config["auth-server-url"],
+                realm_name=oidc_config["realm"],
+                client_id=oidc_config["resource"],
+                client_secret_key=oidc_config["credentials"]["secret"]
             )
 
         return KeycloakOpenID(

@@ -1,3 +1,6 @@
+## [0.2.1]
+- Add realm name prefix to User.username when using KEYCLOAK_MULTI_OIDC_JSON
+
 ## [0.2.0]
 - Upgrade python_keycloak 3.3
 - Fix exception when user has no defined roles for app
