@@ -19,6 +19,7 @@ from .keycloak import (
     add_roles_prefix
 )
 from .settings import api_settings
+from .utils import get_token_issuer
 from . import __title__
 
 
@@ -32,17 +33,26 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
     keycloak_openid = None
 
     def authenticate(self, request):
-        if self.keycloak_openid is None:
-            self.keycloak_openid = get_keycloak_openid()
-
         credentials = super().authenticate(request)
         if credentials:
             user, decoded_token = credentials
+
+            # Append realm_name
+            decoded_token.update(
+                {'realm_name': self.keycloak_openid.realm_name}
+            )
+
+            # Expose Keycloak roles
             request.roles = self._get_roles(user, decoded_token)
+
+            # Create local application groups?
             if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
                 groups = self._get_or_create_groups(request.roles)
                 user.groups.set(groups)
+
+            # Set user is_staff based on Keycloak role mapping
             self._user_toggle_is_staff(request, user)
+
         return credentials
 
     def authenticate_credentials(
@@ -52,6 +62,10 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         """ Attempt to verify JWT from Authorization header with Keycloak """
         log.debug('KeycloakAuthentication.authenticate_credentials')
         try:
+            # Create a default KeycloakOpenID configuration if not already available
+            if self.keycloak_openid is None:
+                self.keycloak_openid = get_keycloak_openid()
+
             user = None
             # Checks token is active
             decoded_token = self._get_decoded_token(key)
@@ -94,7 +108,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
     def _add_realm_prefix(self, value: str) -> str:
         """ Add 'REALM_NAME:' prefix to a string value.
             This only works if using KEYCLOAK_MULTI_OIDC_JSON
-            
+
             Checks to ensure the prefix is not already added.
             :param value: The string to prefix
             :returns: Prefixed string
@@ -280,44 +294,44 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
 
 class KeycloakMultiAuthentication(KeycloakAuthentication):
+    """ Keycloak authentication for multiple realms. Determined by KEYCLOAK_MULTI_OIDC_JSON"""
 
-    def authenticate(self, request):
+    def authenticate_credentials(
+        self,
+        key: str
+    ) -> Tuple[AnonymousUser, Dict]:
+        """ 
+            Decode the unverified token to get the issuer and validate it against ALLOWED_HOSTS.
+            This determines the auth realm 
+        """
+
         if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
             log.info(
                 'KeycloakMultiAuthentication.authenticate | '
                 'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
             )
-            return None
-
-        credentials = None
 
         try:
-            self.keycloak_openid = get_keycloak_openid(host=request.get_host())
-
-            credentials = super().authenticate(request)
-            if credentials:
-                # Append realm_name to credentials returned to view
-                credentials[1].update(
-                    {'realm_name': self.keycloak_openid.realm_name}
-                )
-                return credentials
+            self.keycloak_openid = get_keycloak_openid(host=get_token_issuer(key))
+            return super().authenticate_credentials(key)
 
         except OIDCConfigException as e:
             log.warning(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'OIDCConfigException: {e})'
             )
+            raise AuthenticationFailed() from e
 
         except AuthenticationFailed as e:
             log.info(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'AuthenticationFailed: {e})'
             )
+            raise e
 
         except Exception as e:
             log.error(
                 'KeycloakMultiAuthentication.authenticate | '
                 f'Exception: {e})'
             )
-
-        return credentials
+            raise AuthenticationFailed() from e

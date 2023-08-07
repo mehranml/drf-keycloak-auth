@@ -30,6 +30,7 @@ setuptools.setup(
         'python-keycloak>=3.3',
         'django>=3',
         'urllib3<1.27,>=1.21.1',
+        'pyjwt>=2.6',
         'pytz'
     ],
     keywords=[

@@ -1,3 +1,6 @@
+## [0.2.2]
+- Use the token issuer to determine the multi auth realm instead of the request host. Issuer is validated against ALLOWED_HOSTS
+
 ## [0.2.1]
 - Add realm name prefix to User.username when using KEYCLOAK_MULTI_OIDC_JSON
 
