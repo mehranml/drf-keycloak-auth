@@ -14,6 +14,8 @@ from drf_keycloak_auth.settings import DEFAULTS, USER_SETTINGS
 
 AUTH_USER_MODEL = 'testapp.CustomUser'
 
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(' ')
+
 INSTALLED_APPS = [
     'testapp',
     'drf_keycloak_auth',
@@ -32,7 +34,6 @@ DEBUG = True
 ROOT_URLCONF = 'testapp.urls'
 
 SECRET_KEY = get_random_secret_key()
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

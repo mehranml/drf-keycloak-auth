@@ -17,6 +17,7 @@ log = logging.getLogger('drf_keycloak_auth')
 
 User = get_user_model()
 
+KC_OPENID_CONFIG_KEY = 'auth.dev.ecocommons.org.au'
 
 class UserLoginTestCase(APITestCase):
 
@@ -56,7 +57,7 @@ class UserLoginTestCase(APITestCase):
 
     @tag("ok", "multi")
     def test_login_multi_authentication(self):
-        keycloak_openid = get_keycloak_openid('testserver')
+        keycloak_openid = get_keycloak_openid(KC_OPENID_CONFIG_KEY)
 
         self.client.credentials(
             HTTP_AUTHORIZATION='Bearer ' + self.__get_token_admin(keycloak_openid))
@@ -81,7 +82,7 @@ class UserLoginTestCase(APITestCase):
 
     @tag("ok")
     def test_admin_endpoint(self):
-        keycloak_openid = get_keycloak_openid('testserver')
+        keycloak_openid = get_keycloak_openid(KC_OPENID_CONFIG_KEY)
 
         # Admin
         self.client.credentials(

@@ -15,6 +15,7 @@ log = logging.getLogger(__title__)
 class OIDCConfigException(Exception):
     pass
 
+
 def get_request_oidc_config(host: str) -> dict:
     """ Determine client config from request host.
         :param host: Hostname
@@ -33,7 +34,7 @@ def get_request_oidc_config(host: str) -> dict:
 
     def get_host_oidc(hostname: str, oidc_config_dict: dict) -> dict:
         for key, config in oidc_config_dict.items():
-            if key in str(hostname):
+            if key in str(hostname) or hostname == key:
                 log.info(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
                 return config
         return None
@@ -47,7 +48,7 @@ def get_request_oidc_config(host: str) -> dict:
     oidc_config = get_host_oidc(
         host,
         api_settings.KEYCLOAK_MULTI_OIDC_JSON
-        )
+    )
 
     if oidc_config is None:
         raise OIDCConfigException(f"Could not determine OIDC config for "
@@ -94,6 +95,7 @@ def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
             client_id=api_settings.KEYCLOAK_CLIENT_ID,
             client_secret_key=api_settings.KEYCLOAK_CLIENT_SECRET_KEY
         )
+
     except KeyError as e:
         raise KeyError(
             f'invalid settings: {e}'
@@ -101,9 +103,7 @@ def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
 
 
 def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
-    """
-    Get roles from access token
-    """
+    """ Get roles from access token """
     resource_access_roles = []
     try:
         if client_id is None:

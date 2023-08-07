@@ -65,7 +65,7 @@ unit test:
   variables:
     PYTHONDONTWRITEBYTECODE: 1
     DEBUG: 1
-    DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1 [::1]"
+    DJANGO_ALLOWED_HOSTS: ".dev.ecocommons.org.au localhost 127.0.0.1 [::1]"
     KEYCLOAK_SERVER_URL: https://auth.dev.ecocommons.org.au/auth/
     KEYCLOAK_REALM: ecocommons-foobar
     KEYCLOAK_CLIENT_ID: SECURE
