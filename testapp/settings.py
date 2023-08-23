@@ -67,7 +67,17 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
             'propagate': False,
-        }
+        },
+        # 'urllib3': {
+        #     'handlers': ['console'],
+        #     'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        #     'propagate': True,
+        # },
+        # 'requests_oauthlib': {
+        #     'handlers': ['console'],
+        #     'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        #     'propagate': True,
+        # }
     },
 }
 

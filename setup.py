@@ -29,6 +29,7 @@ setuptools.setup(
         'djangorestframework>=3.9,<4',
         'python-keycloak>=3.3',
         'django>=3',
+        'requests_oauthlib>=1.3',
         'urllib3<1.27,>=1.21.1',
         'pyjwt>=2.6',
         'pytz'
