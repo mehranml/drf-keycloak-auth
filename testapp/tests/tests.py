@@ -19,8 +19,6 @@ User = get_user_model()
 
 TEST_OIDC_JSON_DEFAULT = os.getenv('TEST_OIDC_JSON_DEFAULT',
                                    'auth.dev.ecocommons.org.au')
-TEST_AUTHORIZED_ENDPOINT = os.getenv('TEST_AUTHORIZED_ENDPOINT',
-                                     'https://api.user-management.dev.ecocommons.org.au/api/ping/')
 
 class UserLoginTestCase(APITestCase):
 
@@ -150,21 +148,27 @@ class UserLoginTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # These dont currently run because TEST_AUTHORIZED_ENDPOINT will not run against ecocommons-foobar realm 
-    @tag("notok", "clients")
+    @tag("ok", "clients")
     def test_backend_requests_client(self):
         keycloak_openid = get_keycloak_openid(TEST_OIDC_JSON_DEFAULT)
+        base_url        = keycloak_openid.connection.base_url
+        authorized_endpoint = f'{base_url}realms/{keycloak_openid.realm_name}/protocol/openid-connect/userinfo'
 
         self.client.credentials(
             HTTP_AUTHORIZATION='Bearer ' + self.__get_token_admin(keycloak_openid))
-        response = self.client.get('/test_backend_call/?url='+urllib.parse.quote(TEST_AUTHORIZED_ENDPOINT, safe=''))
+
+        response = self.client.get('/test_backend_call/?url='+urllib.parse.quote(authorized_endpoint, safe=''))
 
         # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
 
-    @tag("notok", "clients_direct")
+    @tag("ok", "clients")
     def test_backend_requests_client_direct(self):
         keycloak_openid = get_keycloak_openid(TEST_OIDC_JSON_DEFAULT)
+        base_url        = keycloak_openid.connection.base_url
+        authorized_endpoint = f'{base_url}realms/{keycloak_openid.realm_name}/protocol/openid-connect/userinfo'
 
         client = BackendRequestClient(keycloak_openid)
-        response = client.get(TEST_AUTHORIZED_ENDPOINT)
+
+        response = client.get(authorized_endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.text)
