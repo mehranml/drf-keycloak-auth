@@ -45,6 +45,9 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             # Expose Keycloak roles
             request.roles = self._get_roles(user, decoded_token)
 
+            # Expose keycloak_openid
+            request.keycloak_openid = self.keycloak_openid
+
             # Create local application groups?
             if api_settings.KEYCLOAK_MANAGE_LOCAL_GROUPS is True:
                 groups = self._get_or_create_groups(request.roles)
@@ -102,7 +105,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         is_active = decoded_token.get('active', False)
         if not is_active:
             raise AuthenticationFailed(
-                'invalid or expired token'
+                'Invalid or expired token'
             )
 
     def _add_realm_prefix(self, value: str) -> str:

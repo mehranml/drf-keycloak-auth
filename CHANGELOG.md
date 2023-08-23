@@ -1,4 +1,4 @@
-## [0.2.2]
+## [0.2.3]
 - Use the token issuer to determine the multi auth realm instead of the request host. Issuer is validated against ALLOWED_HOSTS
 
 ## [0.2.1]
