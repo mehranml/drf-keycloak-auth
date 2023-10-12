@@ -26,4 +26,4 @@ def get_token_issuer(key: str):
     if validate_host(issuer_host, api_settings.ALLOWED_HOSTS):
         return issuer_host
 
-    raise AuthenticationFailed(f"Token issuer is not in ALLOWED_HOSTS")
+    raise AuthenticationFailed(f"Token issuer ({str(issuer_host)}) is not in DJANGO_ALLOWED_HOSTS")
