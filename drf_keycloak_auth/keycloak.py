@@ -35,7 +35,7 @@ def get_request_oidc_config(host: str) -> dict:
     def get_host_oidc(hostname: str, oidc_config_dict: dict) -> dict:
         for key, config in oidc_config_dict.items():
             if key in str(hostname) or hostname == key:
-                log.info(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
+                log.debug(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
                 return config
         return None
 
@@ -78,7 +78,7 @@ def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
             oidc_config = get_request_oidc_config(host)
 
         if oidc_config:
-            log.info(
+            log.debug(
                 'get_keycloak_openid: '
                 f'OIDC realm={oidc_config["realm"]}'
             )
