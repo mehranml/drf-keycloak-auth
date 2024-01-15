@@ -1,5 +1,5 @@
 variables:
-  PY_VERSION: "3.10"
+  PY_VERSION: "3.11"
   PY_IMAGE: "python:${PY_VERSION}"
 
 include:

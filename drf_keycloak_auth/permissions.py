@@ -8,6 +8,7 @@ from .keycloak import prefix_role
 
 log = logging.getLogger(__title__)
 
+ROLE_GUEST = prefix_role('guest')
 ROLE_USER = prefix_role('user')
 ROLE_SERVICE = prefix_role('service')
 ROLE_ADMIN = prefix_role('admin')
