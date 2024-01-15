@@ -23,7 +23,7 @@ check dependencies:
   image: "${PY_IMAGE}"
   before_script:
     - ./setup.py install
-    - pip install safety
+    - pip install --upgrade pip safety
   script:
     - safety check
   # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
