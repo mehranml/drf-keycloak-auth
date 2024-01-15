@@ -1,3 +1,9 @@
+## [0.3.1]
+- Reduce log noise
+
+## [0.3.0]
+- Add `BackendRequestClient`  for client credential requests using Keycloak client OIDC config
+
 ## [0.2.3]
 - Use the token issuer to determine the multi auth realm instead of the request host. Issuer is validated against ALLOWED_HOSTS
 
