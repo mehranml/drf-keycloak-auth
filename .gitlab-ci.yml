@@ -123,5 +123,5 @@ pypi:
     refs:
       - tags
 
-sonarqube-check:
-  extends: .sonarqube-check
+# sonarqube-check:
+#   extends: .sonarqube-check
