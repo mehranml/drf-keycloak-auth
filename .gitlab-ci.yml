@@ -82,9 +82,13 @@ unit test:
     - coverage report -m
     - coverage xml
   allow_failure: false
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
       when: always
       reports:
+        coverage_report:
+          coverage_format: cobertura
+          path: coverage.xml
         junit: xunit-reports/*.xml
       paths:
         - coverage.xml
