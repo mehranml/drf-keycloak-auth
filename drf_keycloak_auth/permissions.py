@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from rest_framework import permissions
+from django.contrib.auth.models import AbstractUser
 
 from . import __title__
 from .keycloak import prefix_role
@@ -30,6 +31,7 @@ def _has_required_group(request, required_groups: List[str]) -> bool:
             set([x.name for x in request.user.groups.all()])
         )
     )
+
 
 class BaseGroupBasedPermission(permissions.BasePermission):
     required_groups = []
@@ -120,7 +122,8 @@ class HasOwnerRole(permissions.BasePermission):
     """ validate auth user is obj.owner """
 
     def has_object_permission(self, request, view, obj):
-        required_roles = [str(obj.owner.pk)]
+        ownerid = obj.owner.pk if isinstance(obj.owner, AbstractUser) else obj.owner
+        required_roles = [str(ownerid)]
         log.info(
             'HasOwnerRole.has_object_permission: '
             f'{required_roles}'

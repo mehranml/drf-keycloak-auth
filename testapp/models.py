@@ -12,6 +12,7 @@ class CustomUser(AbstractUser):
 
 class UserData(models.Model):
     """ test user data """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     owner = models.TextField()
     acl = models.JSONField(default=dict)
+    data = models.TextField()

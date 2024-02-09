@@ -10,7 +10,7 @@ from rest_framework import status, exceptions
 from settings import api_settings
 from drf_keycloak_auth.keycloak import get_keycloak_openid
 from drf_keycloak_auth.clients import BackendRequestClient
-
+from testapp.models import UserData
 from .dump import dump
 
 log = logging.getLogger('drf_keycloak_auth')
@@ -146,6 +146,29 @@ class UserLoginTestCase(APITestCase):
 
         # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @tag("ok", "data", "owner")
+    def test_user_data_ownership(self):
+        keycloak_openid = get_keycloak_openid()
+        username = 'ecocommons-foobar:user@example.com'
+        # I fetch a token
+        self.client.credentials(
+            HTTP_AUTHORIZATION='Bearer '
+            + self.__get_token_user(get_keycloak_openid())
+        )
+        # and see I can login
+        response = self.client.get('/test_auth/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # and get user record
+        user = User.objects.filter(username=username).first()
+        self.assertIsNotNone(user)
+        # and create data record
+        data = UserData(owner=user.id, data="some data")
+        data.save()
+        # and see I can access via API
+        response = self.client.get('/test_auth_role_owner/'+str(data.uuid))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get('data'), "some data")
 
     # These dont currently run because TEST_AUTHORIZED_ENDPOINT will not run against ecocommons-foobar realm 
     @tag("ok", "clients")
