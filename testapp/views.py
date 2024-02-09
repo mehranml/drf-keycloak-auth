@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import authentication, permissions
 from drf_keycloak_auth.clients import BackendRequestClient
 from drf_keycloak_auth.authentication import KeycloakMultiAuthentication, KeycloakAuthentication
-
+from drf_keycloak_auth import permissions as kc_permissions
 
 class TestAuth(APIView):
     authentication_classes = [KeycloakAuthentication]
@@ -24,7 +24,7 @@ class TestAuthMultiOIDC(APIView):
 
 class TestAuthRoleAdmin(APIView):
     authentication_classes = [KeycloakAuthentication]
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAdminUser, kc_permissions.HasAdminRole]
 
     def get(self, request):
         return Response({'status': 'ok'})

@@ -31,7 +31,6 @@ def _has_required_group(request, required_groups: List[str]) -> bool:
         )
     )
 
-
 class BaseGroupBasedPermission(permissions.BasePermission):
     required_groups = []
 

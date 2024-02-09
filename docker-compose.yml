@@ -7,18 +7,8 @@ services:
     environment:
       DEBUG: 1
       DJANGO_LOG_LEVEL: 'DEBUG'
-      DJANGO_ALLOWED_HOSTS: "localhost 127.0.0.1 [::1]"
-      ### Add these in docker-compose.override.yml
-      # KEYCLOAK_CLIENT_SECRET_KEY: 
-      # KEYCLOAK_SERVER_URL:
-      # KEYCLOAK_REALM:
-      # KEYCLOAK_CLIENT_ID: 
-      # KEYCLOAK_MULTI_OIDC_JSON: 
-      # ADMIN_TEST_USERNAME: 
-      # ADMIN_TEST_PASSWORD: 
-      # USER_TEST_USERNAME: 
-      # USER_TEST_PASSWORD: 
-      # TEST_OIDC_JSON_DEFAULT:
+    env_file:
+      - .env
     working_dir: /srv/app/
     volumes:
       - '.:/srv/app:cached'

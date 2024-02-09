@@ -33,6 +33,8 @@ def get_request_oidc_config(host: str) -> dict:
     """
 
     def get_host_oidc(hostname: str, oidc_config_dict: dict) -> dict:
+        if isinstance(oidc_config_dict, dict):
+            log.debug(f"get_host_oidc: looking up 'oidc_config_dict' for hostname ({hostname})")
         for key, config in oidc_config_dict.items():
             if key in str(hostname) or hostname == key:
                 log.debug(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
