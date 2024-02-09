@@ -149,7 +149,6 @@ class UserLoginTestCase(APITestCase):
 
     @tag("ok", "data", "owner")
     def test_user_data_ownership(self):
-        keycloak_openid = get_keycloak_openid()
         username = 'ecocommons-foobar:user@example.com'
         # I fetch a token
         self.client.credentials(

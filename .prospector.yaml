@@ -17,6 +17,7 @@ ignore-paths:
 pylint:
   disable:
     - unused-import
+    - unused-argument
     - django-not-configured
     - f-string-without-interpolation
     - logging-fstring-interpolation

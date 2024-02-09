@@ -6,7 +6,7 @@ from rest_framework import authentication, permissions
 from drf_keycloak_auth.clients import BackendRequestClient
 from drf_keycloak_auth.authentication import KeycloakMultiAuthentication, KeycloakAuthentication
 from drf_keycloak_auth import permissions as kc_permissions
-from .models import UserData
+from testapp.models import UserData
 
 class TestAuth(APIView):
     authentication_classes = [KeycloakAuthentication]
@@ -51,4 +51,3 @@ class TestAuthRoleOwner(GenericAPIView):
     def get(self, request, uuid):
         userdata = self.get_object()
         return Response({ 'uuid': userdata.uuid, 'data': userdata.data })
-        
