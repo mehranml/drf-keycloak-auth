@@ -91,13 +91,14 @@ class UserLoginTestCase(APITestCase):
         del response
         self.assertRaises(exceptions.AuthenticationFailed)
 
-    @tag("ok", "multi")
+    @tag("ok", "multi", "realm")
     def test_login_multi_authentication(self):
         keycloak_openid = get_keycloak_openid(TEST_OIDC_JSON_DEFAULT)
 
         self.client.credentials(
             HTTP_AUTHORIZATION='Bearer ' + self.__get_token_admin(keycloak_openid))
         response = self.client.get('/test_auth_multi_oidc/')
+        dump(response.data)
 
         # log.debug(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

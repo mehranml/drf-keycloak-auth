@@ -13,7 +13,7 @@ class TestAuth(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response({'status': 'ok'})
+        return Response({'status': 'ok', 'auth': request.auth})
 
 
 class TestAuthMultiOIDC(APIView):
@@ -21,7 +21,7 @@ class TestAuthMultiOIDC(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response({'status': 'ok'})
+        return Response({'status': 'ok', 'auth': request.auth})
 
 
 class TestAuthRoleAdmin(APIView):
@@ -29,7 +29,7 @@ class TestAuthRoleAdmin(APIView):
     permission_classes = [permissions.IsAdminUser, kc_permissions.HasAdminRole]
 
     def get(self, request):
-        return Response({'status': 'ok'})
+        return Response({'status': 'ok', 'auth': request.auth})
 
 
 class TestAuthBackendCall(APIView):
