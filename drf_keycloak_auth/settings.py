@@ -37,10 +37,10 @@ DEFAULTS = {
         os.getenv('KEYCLOAK_ROLE_SET_PREFIX', 'role:'),
 
     'KEYCLOAK_MANAGE_LOCAL_USER':
-        os.getenv('KEYCLOAK_MANAGE_LOCAL_USER', True),
+        os.getenv('KEYCLOAK_MANAGE_LOCAL_USER', 'true').lower() in ('true', '1'),
 
     'KEYCLOAK_MANAGE_LOCAL_GROUPS':
-        os.getenv('KEYCLOAK_MANAGE_LOCAL_GROUPS', False),
+        os.getenv('KEYCLOAK_MANAGE_LOCAL_GROUPS', 'false').lower() in ('true', '1'),
 
     'KEYCLOAK_DJANGO_USER_UUID_FIELD':
         os.getenv('KEYCLOAK_DJANGO_USER_UUID_FIELD', 'pk'),

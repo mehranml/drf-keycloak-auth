@@ -3,7 +3,7 @@
 import os
 import sys
 
-
+# noqa
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'testapp.settings')
     try:
