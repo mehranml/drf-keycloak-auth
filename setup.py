@@ -24,12 +24,12 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3',
+    python_requires='>=3.11',
     install_requires=[
-        'djangorestframework>=3.9,<4',
-        'python-keycloak>=3.3',
-        'django>=3',
-        'requests_oauthlib>=1.3',
+        'djangorestframework>=3.15,<4',
+        'python-keycloak>=5.1',
+        'django>=4.1',
+        'requests_oauthlib>=2.0.0',
         'urllib3<1.27,>=1.21.1',
         'pyjwt>=2.6',
         'pytz'

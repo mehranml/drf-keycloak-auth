@@ -307,13 +307,6 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
             Decode the unverified token to get the issuer and validate it against ALLOWED_HOSTS.
             This determines the auth realm 
         """
-
-        if api_settings.KEYCLOAK_MULTI_OIDC_JSON is None:
-            log.info(
-                'KeycloakMultiAuthentication.authenticate | '
-                'api_settings.KEYCLOAK_MULTI_OIDC_JSON is empty'
-            )
-
         try:
             self.keycloak_openid = get_keycloak_openid(host=get_token_issuer(key))
             return super().authenticate_credentials(key)
