@@ -75,21 +75,24 @@ def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
         :returns: KeycloakOpenID
     """
     try:
-        oidc_config = None
         if isinstance(host, str):
-            oidc_config = get_request_oidc_config(host)
+            try: 
+                oidc_config = get_request_oidc_config(host)
+                if oidc_config:
+                    log.debug(
+                        'get_keycloak_openid: '
+                        f'OIDC realm={oidc_config["realm"]}'
+                    )
+                    return KeycloakOpenID(
+                        server_url=oidc_config["auth-server-url"],
+                        realm_name=oidc_config["realm"],
+                        client_id=oidc_config["resource"],
+                        client_secret_key=oidc_config["credentials"]["secret"]
+                    )
 
-        if oidc_config:
-            log.debug(
-                'get_keycloak_openid: '
-                f'OIDC realm={oidc_config["realm"]}'
-            )
-            return KeycloakOpenID(
-                server_url=oidc_config["auth-server-url"],
-                realm_name=oidc_config["realm"],
-                client_id=oidc_config["resource"],
-                client_secret_key=oidc_config["credentials"]["secret"]
-            )
+            except OIDCConfigException as e:
+                if not api_settings.KEYCLOAK_SERVER_URL:
+                    raise e
 
         return KeycloakOpenID(
             server_url=api_settings.KEYCLOAK_SERVER_URL,
