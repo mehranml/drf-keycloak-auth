@@ -18,3 +18,7 @@ publish-pypi:
 publish-testpypi:
 	. venv/bin/activate && \
 	twine upload -r testpypi dist/*
+
+publish-gitlab:
+	. venv/bin/activate && \
+	twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
