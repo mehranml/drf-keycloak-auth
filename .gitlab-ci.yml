@@ -1,6 +1,7 @@
 variables:
   PY_VERSION: "3.11"
   PY_IMAGE: "python:${PY_VERSION}"
+  SAFETY_ARGS: "--ignore 71199" # https://data.safetycli.com/v/71199/eda
 
 include:
   - project: 'ecocommons-australia/operational-notes-and-scripts/ci-pipelines'
@@ -9,40 +10,14 @@ include:
 
 stages:
   - trigger
-  - static analysis
   - bootstrap
+  - static analysis
   - unit test
   - build base
   - build
   - test
   - sonar
   - publish
-
-check dependencies:
-  stage: static analysis
-  image: "${PY_IMAGE}"
-  before_script:
-    - ./setup.py install
-    - pip install --upgrade pip safety
-  script:
-    - safety check
-  # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
-  rules:
-    - if: '$CI'
-
-prospector:
-  stage: static analysis
-  image: "${PY_IMAGE}"
-  before_script:
-    - ./setup.py install
-    - pip install prospector==1.7.7 pylint==2.14.5
-  script:
-    - prospector .
-  rules:
-    - exists:
-      - .prospector.yaml
-      when: on_success
-    - when: never
 
 venv:
   stage: bootstrap
@@ -54,10 +29,37 @@ venv:
     expire_in: 1 hour
     paths:
       - venv/
-  only:
-    refs:
-      - tags
-      - master
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
+  rules:
+    - if: '$CI'
+
+check dependencies:
+  stage: static analysis
+  image: "${PY_IMAGE}"
+  before_script:
+    - . venv/bin/activate
+    - ./setup.py install
+  script:
+    - pip install --upgrade pip safety
+    - safety check $SAFETY_ARGS
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/194129
+  rules:
+    - if: '$CI'
+
+prospector:
+  stage: static analysis
+  image: "${PY_IMAGE}"
+  before_script:
+    - . venv/bin/activate
+    - ./setup.py install
+  script:
+    - pip install prospector==1.7.7 pylint==2.14.5
+    - prospector .
+  rules:
+    - exists:
+      - .prospector.yaml
+      when: on_success
+    - when: never
 
 unit test:
   stage: unit test
@@ -78,6 +80,7 @@ unit test:
     USER_TEST_USERNAME: SECURE
     USER_TEST_PASSWORD: SECURE
   script:
+    - . venv/bin/activate
     - ./setup.py install
     - python -m pip install coverage
     - coverage run --source='./' ./manage.py test testapp ${TEST_ARGS}
@@ -105,8 +108,7 @@ build:
   image: "${PY_IMAGE}"
   script:
     - make
-  dependencies:
-    - venv
+
   artifacts:
     when: on_success
     expire_in: 6 mos
