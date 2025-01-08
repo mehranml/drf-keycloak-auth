@@ -108,7 +108,6 @@ build:
   image: "${PY_IMAGE}"
   script:
     - make
-
   artifacts:
     when: on_success
     expire_in: 6 mos
