@@ -20,7 +20,7 @@
 - Implement CI safety check
 - Remove legacy multi OIDC without hostname
 
-## 0.1.0
+## [0.1.0]
 - Improve auth performance for multiple realms by detecting the correct OIDC adapter using the requester host (old method just tried them all) Requires updated KEYCLOAK_MULTI_OIDC_JSON (see README.md).
 - Better exception handling
 - Less log noise
