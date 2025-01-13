@@ -24,7 +24,7 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.11',
+    python_requires='>=3.10',
     install_requires=[
         'djangorestframework>=3.15,<4',
         'python-keycloak>=5.1',
