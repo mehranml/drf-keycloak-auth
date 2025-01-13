@@ -1,3 +1,7 @@
+## [0.4.0]
+- For KeycloakMultiAuthentication, if KEYCLOAK_MULTI_OIDC_JSON is not configured fall back to KEYCLOAK_SERVER_URL if available
+- Upgrade deps, Django >=4.1, DRF 3.15
+
 ## [0.3.1]
 - Reduce log noise
 
