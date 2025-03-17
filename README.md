@@ -149,6 +149,20 @@ NOTE2: `KeycloakAuthentication` can still be present as a fallback for simpler c
 ___
 
 
+## Session middleware
+
+This library includes an additional plain Django middleware `AuthSessionMiddleware` for using the standard flow Keycloak login when interacting directly with the API via a browser.
+
+Requires standard flow to be enabled in the Keycloak client and a valid redirect URL to be configured.
+
+### Configuration
+
+```py
+MIDDLEWARE = [
+    'drf_keycloak_auth.middleware.AuthSessionMiddleware'
+]
+```
+
 ## Contributing
 
 * Please raise an issue/feature and name your branch 'feature-n' or 'issue-n', where 'n' is the issue number.

@@ -40,10 +40,12 @@ class BackendRequestClient:
 
     def fetch_token(self) -> dict:
         log.info(f"fetch_token: {self.token_endpoint}")
+
         return self.session.fetch_token(
             token_url=self.token_endpoint,
             client_id=self.keycloak_openid.client_id,
-            client_secret=self.keycloak_openid.client_secret_key
+            client_secret=self.keycloak_openid.client_secret_key,
+            scope=["openid", "profile"]
         )
 
     def get(self, url):

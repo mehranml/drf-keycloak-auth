@@ -1,4 +1,4 @@
-FROM python:3.10-slim-buster
+FROM python:3.11
 
 ARG SRC_DIR=.
 ARG BUILD_DIR=/srv/app
@@ -11,3 +11,5 @@ WORKDIR ${BUILD_DIR}
 COPY ${SRC_DIR} ${BUILD_DIR}
 
 RUN ./setup.py install
+
+EXPOSE 8000

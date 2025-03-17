@@ -11,6 +11,8 @@ router = routers.DefaultRouter()
 
 
 urlpatterns = [
+    path('', views.TestPublic.as_view(), name='root'),
+    path('test_pub/', views.TestPublic.as_view(), name='test_pub'),
     path('test_auth/', views.TestAuth.as_view(), name='test_auth'),
     path('test_auth_multi_oidc/', views.TestAuthMultiOIDC.as_view(),
          name='test_auth_multi_oidc'),
