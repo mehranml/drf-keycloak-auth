@@ -110,3 +110,8 @@ venv.bak/
 .mypy_cache/
 keycloak.json
 docker-compose.override.yml
+
+# testapp ignore
+testapp/admin/
+testapp/schema.css
+testapp/staticfiles.json

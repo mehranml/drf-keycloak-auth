@@ -1,5 +1,4 @@
 """ Settings config for the drf_keycloak_auth application """
-import datetime
 import os
 
 from django.conf import settings

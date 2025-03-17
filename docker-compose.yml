@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  test:
+  api:
     build:
       context: .
     environment:
@@ -9,7 +9,11 @@ services:
       DJANGO_LOG_LEVEL: 'DEBUG'
     env_file:
       - .env
+    expose:
+      - '8000'
+    ports:
+      - 8000:8000
     working_dir: /srv/app/
     volumes:
       - '.:/srv/app:cached'
-    command: './manage.py runserver'
+    command: 'bash -c "./manage.py migrate && ./manage.py runserver \"0.0.0.0:8000\""'
