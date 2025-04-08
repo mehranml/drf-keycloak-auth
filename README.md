@@ -138,7 +138,6 @@ REST_FRAMEWORK = {
   ...
   'DEFAULT_AUTHENTICATION_CLASSES': [
     ...
-    'rest_framework.authentication.SessionAuthentication',
     'drf_keycloak_auth.authentication.KeycloakMultiAuthentication',
   ]
 }
@@ -149,18 +148,27 @@ NOTE2: `KeycloakAuthentication` can still be present as a fallback for simpler c
 ___
 
 
-## Session middleware
+## Session auth
 
-This library includes an additional plain Django middleware `AuthSessionMiddleware` for using the standard flow Keycloak login when interacting directly with the API via a browser.
+This library includes `KeycloakSessionAuthentication` for using the 
+Standard flow Keycloak login to interact directly with a browsable API.
 
-Requires standard flow to be enabled in the Keycloak client and a valid redirect URL to be configured.
+Requires 'Standard flow' to be enabled in the Keycloak client and a valid redirect URL to be configured.
 
 ### Configuration
 
+settings.py:
 ```py
-MIDDLEWARE = [
-    'drf_keycloak_auth.middleware.AuthSessionMiddleware'
-]
+  'DEFAULT_AUTHENTICATION_CLASSES': [
+    'drf_keycloak_auth.authentication.KeycloakSessionAuthentication',
+  ]
+```
+
+urls.py:
+```py
+    urlpatterns = [
+        path('api-auth/', include('drf_keycloak_auth.urls', namespace='rest_framework'))
+    ]
 ```
 
 ## Contributing

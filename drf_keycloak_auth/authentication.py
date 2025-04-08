@@ -2,12 +2,13 @@
 from typing import Tuple, Dict, List
 import logging
 import re
-
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from django.core.exceptions import ObjectDoesNotExist, FieldError
 from django.contrib.auth.models import AnonymousUser, update_last_login, Group
 from django.contrib.auth import get_user_model
 from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
+from keycloak.exceptions import KeycloakPostError, KeycloakAuthenticationError
 from .keycloak import (
     OIDCConfigException,
     get_keycloak_openid,
@@ -37,7 +38,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
 
     def authenticate_credentials(self, key: str) -> Tuple[AnonymousUser, Dict]:
         """Attempt to verify JWT from Authorization header with Keycloak"""
-        log.debug("KeycloakAuthentication.authenticate_credentials")
+        log.debug(f"KeycloakAuthentication.authenticate_credentials | {str(key)}")
         try:
             # Create a default KeycloakOpenID configuration if not already available
             if self.keycloak_openid is None:
@@ -49,7 +50,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
             self._verify_token_active(decoded_token)
             if api_settings.KEYCLOAK_MANAGE_LOCAL_USER is not True:
                 log.debug(
-                    "KeycloakAuthentication.authenticate_credentials: "
+                    "KeycloakAuthentication.authenticate_credentials | "
                     f"{decoded_token}"
                 )
                 user = AnonymousUser()
@@ -57,13 +58,11 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
                 user = self._handle_local_user(decoded_token)
 
             log.debug(
-                "KeycloakAuthentication.authenticate_credentials:\n"
-                "################# decoded_token ###############\n"
-                f"{user} | {decoded_token}\n"
-                "################ /decoded_token ###############"
+                f"KeycloakAuthentication.authenticate_credentials | {user} {decoded_token}"
             )
 
             return (user, decoded_token)
+
         except Exception as e:
             log.error(
                 "KeycloakAuthentication.authenticate_credentials | " f"Exception: {e}"
@@ -224,7 +223,7 @@ class KeycloakAuthentication(authentication.TokenAuthentication):
         except Exception as e:
             log.warning("KeycloakAuthentication._get_roles | " f"Exception: {e}")
 
-        log.debug(f"KeycloakAuthentication._get_roles: {roles}")
+        log.debug(f"KeycloakAuthentication._get_roles | {roles}")
         return roles
 
     def _get_or_create_groups(self, roles: List[str]) -> List[Group]:
@@ -324,3 +323,74 @@ class KeycloakMultiAuthentication(KeycloakAuthentication):
         except Exception as e:
             log.error("KeycloakMultiAuthentication.authenticate | " f"Exception: {e})")
             raise AuthenticationFailed() from e
+
+
+class KeycloakSessionAuthentication(authentication.SessionAuthentication):
+    """ Keycloak Standard Flow (Auth Code Flow) authentication. """
+
+    # Exclude 'keycloak' parameters when computing the redirect URI.
+    # Note, this is somewhat brittle as the exact redirect parameters
+    # can vary depending on the realm and client configuration.
+    EXCLUDE_REDIRECT_KEYCLOAK_PARAMS = [
+        'session_state',
+        'code',
+        'iss'
+    ]
+
+    def get_redirect_uri(self, request) -> str:
+        """ Create a redirect URI from the current request. """
+        parsed = urlparse(request.build_absolute_uri())
+        query = parse_qs(parsed.query)
+        for p in KeycloakSessionAuthentication.EXCLUDE_REDIRECT_KEYCLOAK_PARAMS:
+            query.pop(p, None)
+        redirect_uri = urlunparse(parsed[:4] + (urlencode(query), None))
+        log.info(f"KeycloakSessionAuthentication | get_redirect_uri: {redirect_uri}")
+        return redirect_uri
+
+    def authenticate(self, request):
+        auth_result = super().authenticate(request)
+        if auth_result:
+            return auth_result
+
+        auth = KeycloakMultiAuthentication()
+        auth.keycloak_openid = get_keycloak_openid(host=request.get_host())
+
+        # Do not handle session outside a browsable api context. 
+        if "text/html" not in request.headers.get("Accept", "").lower():
+            return None
+
+        # Code for token exchange.
+        if "access_token" not in request.session:
+            try:
+                code = request.query_params.get("code")
+                if not code:
+                    return None
+
+                log.debug(f"KeycloakSessionAuthentication | code received: {code}")
+                token_response = auth.keycloak_openid.token(
+                    grant_type="authorization_code",
+                    code=code,
+                    redirect_uri=self.get_redirect_uri(request)
+                )
+                request.session["access_token"] = token_response["access_token"]
+                request.session.set_expiry(token_response["expires_in"])
+                request.session.modified = True
+                log.debug(f"KeycloakSessionAuthentication | "
+                          f"Access token stored in session. {request.session['access_token']}")
+
+            except KeycloakPostError as e:
+                log.error(f"KeycloakSessionAuthentication | KeycloakPostError: {e}")
+                raise AuthenticationFailed() from e
+
+            except KeycloakAuthenticationError as e:
+                log.error(f"KeycloakSessionAuthentication | KeycloakAuthenticationError: {e}")
+                raise AuthenticationFailed() from e
+
+        # Make User model available
+        user, decoded_token = auth.authenticate_credentials(request.session["access_token"])
+        auth.post_auth_operations(user, decoded_token, request)
+        request.user = user
+
+        log.info(f"KeycloakSessionAuthentication | User '{str(user)}' authenticated successfully.")
+
+        return (user, decoded_token)

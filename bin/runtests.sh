@@ -1,2 +1,2 @@
 #/bin/bash
-docker-compose run --rm test ./manage.py test testapp $@
+docker-compose run --rm api ./manage.py test testapp $@

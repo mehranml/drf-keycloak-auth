@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_keycloak_auth',
     'django.contrib.auth',
+    'django.contrib.sessions',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles'
 ]
@@ -37,17 +38,19 @@ DEBUG = True
 
 ROOT_URLCONF = 'testapp.urls'
 
-SECRET_KEY = get_random_secret_key()
+SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'drf_keycloak_auth.authentication.KeycloakSessionAuthentication',
         # 'drf_keycloak_auth.authentication.KeycloakAuthentication',
         # 'drf_keycloak_auth.authentication.KeycloakMultiAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.IsAdminUser',
     ]
 }
@@ -111,9 +114,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'drf_keycloak_auth.middleware.AuthSessionMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
 api_settings = APISettings(USER_SETTINGS, DEFAULTS, IMPORT_STRINGS)

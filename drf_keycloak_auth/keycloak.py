@@ -34,10 +34,10 @@ def get_request_oidc_config(host: str) -> dict:
 
     def get_host_oidc(hostname: str, oidc_config_dict: dict) -> dict:
         if isinstance(oidc_config_dict, dict):
-            log.debug(f"get_host_oidc: looking up 'oidc_config_dict' for hostname ({hostname})")
+            log.debug(f"get_host_oidc | looking up 'oidc_config_dict' for hostname ({hostname})")
         for key, config in oidc_config_dict.items():
             if key in str(hostname) or hostname == key:
-                log.debug(f"get_host_oidc: Found OIDC adapter for '{hostname}'")
+                log.debug(f"get_host_oidc | Found OIDC adapter for '{hostname}'")
                 return config
         return None
 
@@ -80,7 +80,7 @@ def get_keycloak_openid(host: str = None) -> KeycloakOpenID:
                 oidc_config = get_request_oidc_config(host)
                 if oidc_config:
                     log.debug(
-                        'get_keycloak_openid: '
+                        'get_keycloak_openid | '
                         f'OIDC realm={oidc_config["realm"]}'
                     )
                     return KeycloakOpenID(
@@ -114,7 +114,7 @@ def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
         if client_id is None:
             client_id = api_settings.KEYCLOAK_CLIENT_ID
 
-        log.debug(f'{__name__} - get_resource_roles - client_id: {client_id}')
+        log.debug(f'{__name__} | get_resource_roles | client_id: {client_id}')
 
         resource_access_roles = (
             decoded_token
@@ -123,22 +123,22 @@ def get_resource_roles(decoded_token: Dict, client_id=None) -> List[str]:
             .get('roles', [])
         )
         roles = add_roles_prefix(resource_access_roles)
-        log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
+        log.debug(f'{__name__} | get_resource_roles | roles: {roles}')
 
         return roles
 
     except Exception as e:
-        log.warning(f'{__name__} - get_resource_roles - Exception: ({str(type(e).__name__ )}) {e}\n'
+        log.warning(f'{__name__} | get_resource_roles | Exception: ({str(type(e).__name__ )}) {e}\n'
                     f'{traceback.format_exc()}')
         return []
 
 
 def add_roles_prefix(roles: List[str]) -> List[str]:
     """ add role prefix configured by KEYCLOAK_ROLE_SET_PREFIX to a list of roles """
-    log.debug(f'{__name__} - get_resource_roles - roles: {roles}')
+    log.debug(f'{__name__} | get_resource_roles - roles: {roles}')
     prefixed_roles = [prefix_role(x) for x in roles]
     log.debug(
-        f'{__name__} - get_resource_roles - prefixed_roles: {prefixed_roles}'
+        f'{__name__} | get_resource_roles | prefixed_roles: {prefixed_roles}'
     )
     return prefixed_roles
 
