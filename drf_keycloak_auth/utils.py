@@ -20,7 +20,17 @@ def get_token_issuer(key: str):
         log.warning(f"Unable to get token issuer. Could not decode token")
         return None
 
-    issuer_host = urlparse(decoded.get('iss')).netloc
+    return verify_token_issuer(decoded)
+
+
+def verify_token_issuer(decoded_token: dict) -> str:
+    """ 
+   Validate a token issuer against ALLOWED_HOSTS
+    :param decoded_token: token
+    :return: issuer
+    :raises: AuthenticationFailed
+    """
+    issuer_host = urlparse(decoded_token.get('iss')).netloc
 
     # Ensure issuer is in ALLOWED_HOSTS
     if validate_host(issuer_host, api_settings.ALLOWED_HOSTS):

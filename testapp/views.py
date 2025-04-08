@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
 from drf_keycloak_auth.clients import BackendRequestClient
 from drf_keycloak_auth.authentication import (
+    KeycloakSessionAuthentication,
     KeycloakMultiAuthentication,
     KeycloakAuthentication,
 )
@@ -21,19 +23,19 @@ class TestPublic(APIView):
 
 
 class TestAuth(APIView):
-    authentication_classes = [KeycloakAuthentication]
+    authentication_classes = [KeycloakAuthentication, KeycloakSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response({"status": "ok", "auth": request.auth})
+        return Response({"status": "ok", "user": str(request.user), "auth": request.auth})
 
 
 class TestAuthMultiOIDC(APIView):
-    authentication_classes = [KeycloakMultiAuthentication]
+    authentication_classes = [KeycloakMultiAuthentication, KeycloakSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        return Response({"status": "ok", "auth": request.auth})
+        return Response({"status": "ok", "user": str(request.user), "auth": request.auth})
 
 
 class TestAuthRoleAdmin(APIView):
