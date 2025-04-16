@@ -45,8 +45,8 @@ def get_request_oidc_config(host: str) -> dict:
         raise OIDCConfigException(f"OIDC config KEYCLOAK_MULTI_OIDC_JSON not available")
 
     # If there is only one entry just return it.
-    if len(api_settings.KEYCLOAK_MULTI_OIDC_JSON.values()) == 1:
-        api_settings.KEYCLOAK_MULTI_OIDC_JSON.values()[0]
+    if len(api_settings.KEYCLOAK_MULTI_OIDC_JSON.keys()) == 1:
+        next(iter(api_settings.KEYCLOAK_MULTI_OIDC_JSON))
 
     # Otherwise resolve by host
     if not isinstance(host, str):
