@@ -357,8 +357,8 @@ class KeycloakSessionAuthentication(authentication.SessionAuthentication):
             return None
 
         try:
-            auth = KeycloakMultiAuthentication()
-            auth.keycloak_openid = get_keycloak_openid(host=request.get_host())
+            auth = KeycloakAuthentication()
+            auth.keycloak_openid = get_keycloak_openid()
         except OIDCConfigException as e:
             log.error(f"KeycloakSessionAuthentication | OIDCConfigException: {e}")
             return None
