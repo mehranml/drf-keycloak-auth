@@ -352,11 +352,15 @@ class KeycloakSessionAuthentication(authentication.SessionAuthentication):
         if auth_result:
             return auth_result
 
-        auth = KeycloakMultiAuthentication()
-        auth.keycloak_openid = get_keycloak_openid(host=request.get_host())
-
         # Do not handle session outside a browsable api context. 
         if "text/html" not in request.headers.get("Accept", "").lower():
+            return None
+
+        try:
+            auth = KeycloakMultiAuthentication()
+            auth.keycloak_openid = get_keycloak_openid(host=request.get_host())
+        except OIDCConfigException as e:
+            log.error(f"KeycloakSessionAuthentication | OIDCConfigException: {e}")
             return None
 
         # Code for token exchange.
