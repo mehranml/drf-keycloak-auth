@@ -30,7 +30,7 @@ setuptools.setup(
         'python-keycloak>=5.1',
         'django>=4.1',
         'requests_oauthlib>=2.0.0',
-        'urllib3<1.27,>=1.21.1',
+        'urllib3<3,>=1.21.1',
         'pyjwt>=2.6',
         'pytz'
     ],
